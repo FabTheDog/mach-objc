@@ -797,24 +797,38 @@ pub const Converter = struct {
 
     fn convertEnumConstantDecl(self: *Self, n: std.json.Value) !EnumValue {
         var value: i64 = 0;
+        var is_max_uint = false;
         for (getArray(n, "inner")) |child| {
             const childKind = getString(child, "kind");
             if (std.mem.eql(u8, childKind, "ConstantExpr")) {
-                value = self.convertConstantExpr(child);
+                const result = self.convertConstantExpr(child);
+                value = result.value;
+                is_max_uint = result.is_max_uint;
             } else if (std.mem.eql(u8, childKind, "ImplicitCastExpr")) {
-                value = self.convertImplicitCastExpr(child);
+                const result = self.convertImplicitCastExpr(child);
+                value = result.value;
+                is_max_uint = result.is_max_uint;
             }
         }
 
-        return .{ .name = getString(n, "name"), .value = value };
+        return .{ .name = getString(n, "name"), .value = value, .is_max_uint = is_max_uint };
     }
 
-    fn convertConstantExpr(_: *Self, n: std.json.Value) i64 {
+    fn convertConstantExpr(_: *Self, n: std.json.Value) EnumValue {
         const value = getString(n, "value");
-        return std.fmt.parseInt(i64, value, 10) catch 0;
+        if (std.fmt.parseInt(i64, value, 10)) |v| {
+            return .{ .name = "", .value = v };
+        } else |_| {
+            if (std.fmt.parseUnsigned(u64, value, 10)) |v| {
+                if (v == std.math.maxInt(u64)) {
+                    return .{ .name = "", .value = 0, .is_max_uint = true };
+                }
+            } else |_| {}
+            return .{ .name = "", .value = 0 };
+        }
     }
 
-    fn convertImplicitCastExpr(self: *Self, n: std.json.Value) i64 {
+    fn convertImplicitCastExpr(self: *Self, n: std.json.Value) EnumValue {
         for (getArray(n, "inner")) |child| {
             const childKind = getString(child, "kind");
             if (std.mem.eql(u8, childKind, "ConstantExpr")) {
@@ -822,7 +836,7 @@ pub const Converter = struct {
             }
         }
 
-        return 0;
+        return .{ .name = "", .value = 0 };
     }
 
     fn convertFunctionDecl(self: *Self, n: std.json.Value) void {
@@ -1076,7 +1090,13 @@ fn Generator(comptime WriterType: type) type {
                     try self.generateTypeName(v.name);
                     try self.writer.print(": ", .{});
                     try self.generateTypeName(e.name);
-                    try self.writer.print(" = {d};\n", .{v.value});
+                    if (v.is_max_uint) {
+                        try self.writer.print(" = std.math.maxInt(", .{});
+                        try self.generateType(e.ty);
+                        try self.writer.print(");\n", .{});
+                    } else {
+                        try self.writer.print(" = {d};\n", .{v.value});
+                    }
                 }
             }
         }
