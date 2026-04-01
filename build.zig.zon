@@ -32,8 +32,8 @@
     },
     .dependencies = .{
         .xcode_frameworks = .{
-            .url = "https://pkg.hexops.org/pkg/hexops/xcode-frameworks/2716c285d884392e111de1e956b9fd3473bc627d.tar.gz",
-            .hash = "12209e92eccfe0a416410f0453c5380fd939ee976c82e633cef4d384f41fa4e26f13",
+            .url = "https://pkg.hexops.org/pkg/hexops/xcode-frameworks/d9de76b40c979eb425aad0e365fe57b676b5d6f6.tar.gz",
+            .hash = "12202581dd566f575d203886d441f0d379bb4a52d73692d681e8edfcec578faf09c2",
             .lazy = true,
         },
     },
