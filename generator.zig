@@ -1939,10 +1939,13 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSObject", "retainCount" },
 
         [2][]const u8{ "NSApplication", "sharedApplication" },
+        [2][]const u8{ "NSApplication", "delegate" },
         [2][]const u8{ "NSApplication", "setDelegate" },
         [2][]const u8{ "NSApplication", "run" },
         [2][]const u8{ "NSApplication", "setActivationPolicy" },
         [2][]const u8{ "NSApplication", "activateIgnoringOtherApps" },
+        [2][]const u8{ "NSApplication", "nextEventMatchingMask:untilDate:inMode:dequeue" },
+        [2][]const u8{ "NSApplication", "sendEvent" },
 
         [2][]const u8{ "NSWindow", "initWithContentRect:styleMask:backing:defer:screen" },
         [2][]const u8{ "NSWindow", "isReleasedWhenClosed" },
@@ -1995,8 +1998,17 @@ fn generateAppKit(generator: anytype) !void {
 
         [2][]const u8{ "NSView", "layer" },
         [2][]const u8{ "NSView", "setLayer" },
+        [2][]const u8{ "NSView", "setWantsLayer" },
         [2][]const u8{ "NSView", "initWithFrame" },
         [2][]const u8{ "NSView", "sendEvent" },
+        [2][]const u8{ "NSView", "addSubview" },
+        [2][]const u8{ "NSView", "setFrameOrigin" },
+        [2][]const u8{ "NSView", "setFrameSize" },
+        [2][]const u8{ "NSView", "setBoundsOrigin" },
+        [2][]const u8{ "NSView", "setBoundsSize" },
+        [2][]const u8{ "NSView", "window" },
+
+        [2][]const u8{ "NSDate", "distantPast" },
 
         [2][]const u8{ "NSColor", "colorWithRed:green:blue:alpha" },
 
@@ -2013,6 +2025,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSEvent", "hasPreciseScrollingDeltas" },
         [2][]const u8{ "NSEvent", "magnification" },
         [2][]const u8{ "NSEvent", "phase" },
+        [2][]const u8{ "NSEvent", "type" },
         [2][]const u8{ "NSEvent", "addLocalMonitorForEventsMatchingMask:handler" },
 
         [2][]const u8{ "NSDictionary", "" },
@@ -2051,7 +2064,7 @@ fn generateAppKit(generator: anytype) !void {
     // try generator.addInterface("NSDockTile");
     try generator.addInterface("NSAppearance");
     try generator.addInterface("NSEvent");
-    // try generator.addInterface("NSDate");
+    try generator.addInterface("NSDate");
     // try generator.addInterface("NSGraphicsContext");
     // try generator.addInterface("NSDocument");
     // try generator.addInterface("NSData");
@@ -2185,7 +2198,7 @@ fn generateAppKit(generator: anytype) !void {
     try generator.addEnum("NSEventPhase");
     // try generator.addEnum("NSEventSubtype");
     // try generator.addEnum("NSEventSwipeTrackingOptions");
-    // try generator.addEnum("NSEventType");
+    try generator.addEnum("NSEventType");
     // try generator.addEnum("NSFileWrapperReadingOptions");
     // try generator.addEnum("NSFileWrapperWritingOptions");
     // try generator.addEnum("NSFocusRingType");

@@ -1,3 +1,4 @@
+const std = @import("std");
 const ca = @import("quartz_core.zig");
 const cf = @import("core_foundation.zig");
 const ns = @import("foundation.zig");
@@ -37,6 +38,7 @@ pub const Rect = cg.Rect;
 pub const Point = cg.Point;
 pub const Size = cg.Size;
 pub const RunLoopMode = *String;
+pub extern const NSDefaultRunLoopMode: RunLoopMode;
 pub const PrinterPaperName = *String;
 pub const PrintJobDispositionValue = *String;
 pub const InterfaceStyle = UInteger;
