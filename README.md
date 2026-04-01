@@ -6,7 +6,9 @@ Zig bindings to various Objective-C APIs, e.g. Metal, AVFAudio, etc.
 
 See https://machengine.org/pkg/mach-objc
 
-Use `update.sh` to regenerate the generated source files.
+To regenerate the contents of this repository using the upstream version it currently targets, run `./generate.sh`.
+
+To update this repository to the latest upstream version, run `./update.sh` then `./generate.sh`.
 
 ## Issues
 
