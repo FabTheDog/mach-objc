@@ -2158,7 +2158,6 @@ fn generateAppKit(generator: anytype) !void {
     // try generator.addInterface("NSTouch");
     try generator.addInterface("NSTrackingArea");
     try generator.addEnum("NSTrackingAreaOptions");
-    try generator.addEnum("NSRunLoopMode");
     // try generator.addInterface("NSURLHandle");
     // try generator.addInterface("NSUndoManager");
     // try generator.addInterface("NSWindowController");

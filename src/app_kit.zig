@@ -57,8 +57,6 @@ pub const WindowFrameAutosaveName = *String;
 pub const AccessibilityParameterizedAttributeName = *String;
 pub const UserInterfaceItemIdentifier = *String;
 
-pub extern const NSDefaultRunLoopMode: RunLoopMode;
-
 pub const TrackingAreaOptions = UInteger;
 pub const TrackingMouseEnteredAndExited: TrackingAreaOptions = 1;
 pub const TrackingMouseMoved: TrackingAreaOptions = 2;

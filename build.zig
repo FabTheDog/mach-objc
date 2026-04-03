@@ -14,6 +14,7 @@ pub fn build(b: *std.Build) void {
     // TODO: Maybe split this out into a separate module so we only link these in when needed.
     if (target.result.os.tag == .macos) {
         module.linkFramework("AppKit", .{});
+        module.linkFramework("CoreVideo", .{});
         if (target.result.cpu.arch == .x86_64) {
             module.addAssemblyFile(b.path("MACHAppDelegate_x86_64_apple_macos12.s"));
             module.addAssemblyFile(b.path("MACHWindowDelegate_x86_64_apple_macos12.s"));

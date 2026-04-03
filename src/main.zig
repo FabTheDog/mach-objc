@@ -9,6 +9,7 @@ pub const metal = @import("metal.zig");
 pub const quartz_core = @import("quartz_core.zig");
 pub const app_kit = @import("app_kit.zig");
 pub const core_video = @import("core_video.zig");
+pub const system = @import("system.zig");
 
 pub const mach = struct {
     pub const AppDelegate = opaque {
