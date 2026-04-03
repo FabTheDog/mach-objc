@@ -57,6 +57,8 @@ pub const WindowFrameAutosaveName = *String;
 pub const AccessibilityParameterizedAttributeName = *String;
 pub const UserInterfaceItemIdentifier = *String;
 
+pub extern const NSDefaultRunLoopMode: RunLoopMode;
+
 pub const TrackingAreaOptions = UInteger;
 pub const TrackingMouseEnteredAndExited: TrackingAreaOptions = 1;
 pub const TrackingMouseMoved: TrackingAreaOptions = 2;
@@ -440,6 +442,9 @@ pub const Date = opaque {
     pub const alloc = InternalInfo.alloc;
     pub const allocInit = InternalInfo.allocInit;
 
+    pub fn dateWithTimeIntervalSinceNow(secs_: TimeInterval) *@This() {
+        return objc.msgSend(@This().InternalInfo.class(), "dateWithTimeIntervalSinceNow:", *@This(), .{secs_});
+    }
     pub fn distantPast() *Date {
         return objc.msgSend(@This().InternalInfo.class(), "distantPast", *Date, .{});
     }
