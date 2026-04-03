@@ -40,8 +40,9 @@ pub fn Block(comptime Signature: type) type {
             });
 
             const offset = @offsetOf(BlockLiteral(void), "invoke");
-            const invoke_ptr: *const SignatureForInvoke = @ptrCast(self + offset);
-            return @call(.auto, invoke_ptr, .{self} ++ args);
+            const base: [*]const u8 = @ptrCast(self);
+            const invoke_ptr: *const *const SignatureForInvoke = @ptrCast(@alignCast(base + offset));
+            return @call(.auto, invoke_ptr.*, .{self} ++ args);
         }
 
         pub fn copy(self: *const @This()) *@This() {
