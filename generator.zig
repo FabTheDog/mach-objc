@@ -956,7 +956,7 @@ pub const Converter = struct {
 
 // ------------------------------------------------------------------------------------------------
 
-const prefixes = [_][]const u8{ "CA", "CF", "CG", "MTK", "MTL", "NS" };
+const prefixes = [_][]const u8{ "CA", "CF", "CG", "MTK", "MTL", "NS", "CV" };
 
 pub fn getNamespace(id: []const u8) []const u8 {
     for (prefixes) |prefix| {
@@ -1931,6 +1931,13 @@ fn generateCoreMIDI(generator: anytype) !void {
     // TODO: generate everything needed to replace https://github.com/hexops/mach/pull/1196/files#diff-0bf7b1323cd692a01ead7d43a082b7dec001f9b2fc0ded1b1c0bd6d750578456
 }
 
+fn generateCoreVideo(generator: anytype) !void {
+    generator.namespace = "CV";
+    generator.allow_methods = &.{
+        //[2][]const u8{ "NS", "copy" },
+    };
+}
+
 fn generateAppKit(generator: anytype) !void {
     generator.namespace = "NS";
     generator.allow_methods = &.{
@@ -2027,6 +2034,8 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSEvent", "phase" },
         [2][]const u8{ "NSEvent", "type" },
         [2][]const u8{ "NSEvent", "addLocalMonitorForEventsMatchingMask:handler" },
+
+        [2][]const u8{ "NSDate", "dateWithTimeIntervalSinceNow" },
 
         [2][]const u8{ "NSDictionary", "" },
 
@@ -2149,6 +2158,7 @@ fn generateAppKit(generator: anytype) !void {
     // try generator.addInterface("NSTouch");
     try generator.addInterface("NSTrackingArea");
     try generator.addEnum("NSTrackingAreaOptions");
+    try generator.addEnum("NSRunLoopMode");
     // try generator.addInterface("NSURLHandle");
     // try generator.addInterface("NSUndoManager");
     // try generator.addInterface("NSWindowController");
@@ -2289,7 +2299,7 @@ fn usage() void {
         \\mach-objc-generator [options]
         \\
         \\Options:
-        \\  --framework  Metal,AVFAudio,CoreMIDI,AppKit  which code to generate
+        \\  --framework  Metal,AVFAudio,CoreMIDI,AppKit,CoreVideo  which code to generate
         \\  --help
         \\
     , .{});
@@ -2300,6 +2310,7 @@ const Framework = enum {
     avf_audio,
     core_midi,
     app_kit,
+    core_video,
 };
 
 pub fn main() anyerror!void {
@@ -2325,6 +2336,7 @@ pub fn main() anyerror!void {
                 if (std.mem.eql(u8, args[i], "AVFAudio")) break :blk .avf_audio;
                 if (std.mem.eql(u8, args[i], "CoreMIDI")) break :blk .core_midi;
                 if (std.mem.eql(u8, args[i], "AppKit")) break :blk .app_kit;
+                if (std.mem.eql(u8, args[i], "CoreVideo")) break :blk .core_video;
                 usage();
                 std.process.exit(1);
             };
@@ -2376,6 +2388,7 @@ pub fn main() anyerror!void {
         .avf_audio => try generateAVFAudio(&generator),
         .core_midi => try generateCoreMIDI(&generator),
         .app_kit => try generateAppKit(&generator),
+        .core_video => try generateCoreVideo(&generator),
     }
     try generator.generate();
 }

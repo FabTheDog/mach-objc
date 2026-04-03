@@ -56,3 +56,5 @@ pub const NibName = *String;
 pub const WindowFrameAutosaveName = *String;
 pub const AccessibilityParameterizedAttributeName = *String;
 pub const UserInterfaceItemIdentifier = *String;
+
+pub extern const NSDefaultRunLoopMode: RunLoopMode;
