@@ -71,14 +71,6 @@ pub const mach = struct {
             return objc.msgSend(self_, "initWithFrame:", *@This(), .{frameRect_});
         }
 
-        pub fn initWithFrame_withRenderLoop(self_: *@This(), frameRect_: app_kit.Rect, withRenderLoop_: bool) *@This() {
-            return objc.msgSend(self_, "initWithFrame:withRenderLoop:", *@This(), .{ frameRect_, withRenderLoop_ });
-        }
-
-        pub fn stopRenderLoop(self_: *@This()) void {
-            return objc.msgSend(self_, "stopRenderLoop", void, .{});
-        }
-
         pub fn currentDrawable(self_: *@This()) ?*quartz_core.MetalDrawable {
             return objc.msgSend(self_, "currentDrawable", ?*quartz_core.MetalDrawable, .{});
         }

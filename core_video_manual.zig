@@ -42,8 +42,11 @@ pub const CGError = i32;
 // Functions
 
 // CVDisplayLink.h
-extern fn CVDisplayLinkCreateWithCGDisplay(CGDirectDisplayID, *CVDisplayLinkRef) CVReturn;
+extern fn CVDisplayLinkCreateWithCGDisplay(CGDirectDisplayID, **CVDisplayLinkRef) CVReturn;
 pub const displayLinkWithCGDisplay = CVDisplayLinkCreateWithCGDisplay;
+
+extern fn CVDisplayLinkCreateWithActiveCGDisplays(**CVDisplayLinkRef) CVReturn;
+pub const createWithActiveCGDisplays = CVDisplayLinkCreateWithActiveCGDisplays;
 
 extern fn CVDisplayLinkGetNominalOutputVideoRefreshPeriod(*CVDisplayLinkRef) CVTime;
 pub const getNominalOutputVideoRefreshPeriod = CVDisplayLinkGetNominalOutputVideoRefreshPeriod;
@@ -56,9 +59,16 @@ pub const mainDisplayID = CGMainDisplayID;
 
 extern fn CVDisplayLinkSetOutputCallback(
     *CVDisplayLinkRef,
-    *const fn (*CVDisplayLinkRef, *CVTimeStamp, *CVTimeStamp, u64, *u64, ?*anyopaque) callconv(.C) void,
+    *const fn (*CVDisplayLinkRef, *const CVTimeStamp, *const CVTimeStamp, u64, *u64, ?*anyopaque) callconv(.C) CVReturn,
+    ?*anyopaque,
 ) CVReturn;
 pub const setOutputCallback = CVDisplayLinkSetOutputCallback;
 
 extern fn CVDisplayLinkStart(*CVDisplayLinkRef) CVReturn;
 pub const displayLinkStart = CVDisplayLinkStart;
+
+extern fn CVDisplayLinkStop(*CVDisplayLinkRef) CVReturn;
+pub const displayLinkStop = CVDisplayLinkStop;
+
+extern fn CVDisplayLinkRelease(*CVDisplayLinkRef) void;
+pub const displayLinkRelease = CVDisplayLinkRelease;
