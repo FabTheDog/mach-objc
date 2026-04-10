@@ -18,7 +18,7 @@ git_clone_rev() {
     popd
 }
 
-git_clone_rev https://code.hexops.org/hexops/xcode-frameworks 3d1d9613c39bfc2ebfa2551626e87b7f38e0a29f xcode-frameworks
+git_clone_rev https://code.hexops.org/hexops/xcode-frameworks d9de76b40c979eb425aad0e365fe57b676b5d6f6 xcode-frameworks
 
 zig build -Doptimize=ReleaseFast
 
