@@ -72,9 +72,21 @@ pub fn build(b: *std.Build) void {
         .name = "generator",
         .root_module = b.createModule(.{
             .root_source_file = b.path("generator.zig"),
-            .target = target,
-            .optimize = optimize,
+            .target = b.graph.host,
+            .optimize = .ReleaseSafe,
         }),
     });
     b.installArtifact(generator_exe);
+
+    const gen_run = b.addRunArtifact(generator_exe);
+    gen_run.addArg("--generate-all");
+    if (b.lazyDependency("xcode_frameworks", .{})) |dep| {
+        gen_run.addArg("--frameworks-dir");
+        gen_run.addDirectoryArg(dep.path("Frameworks"));
+        gen_run.addArg("--include-dir");
+        gen_run.addDirectoryArg(dep.path("include"));
+    }
+
+    const generate_step = b.step("generate", "Generate files");
+    generate_step.dependOn(&gen_run.step);
 }
