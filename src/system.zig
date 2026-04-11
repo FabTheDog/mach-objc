@@ -24,20 +24,20 @@ pub fn Block(comptime Signature: type) type {
     const signature_fn_info = @typeInfo(Signature).@"fn";
     return opaque {
         pub fn invoke(self: *@This(), args: std.meta.ArgsTuple(Signature)) signature_fn_info.return_type.? {
-            const self_param = std.builtin.Type.Fn.Param{
-                .is_generic = false,
-                .is_noalias = false,
-                .type = *@This(),
+            const SignatureForInvoke = comptime init: {
+                var param_types: []const type = &.{*@This()};
+                var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{.{}};
+                for (signature_fn_info.params) |p| {
+                    param_types = param_types ++ .{p.type.?};
+                    param_attrs = param_attrs ++ .{.{}};
+                }
+                break :init @Fn(
+                    param_types,
+                    @ptrCast(param_attrs.ptr),
+                    signature_fn_info.return_type.?,
+                    .{ .@"callconv" = .c },
+                );
             };
-            const SignatureForInvoke = @Type(.{
-                .@"fn" = .{
-                    .calling_convention = std.builtin.CallingConvention.c,
-                    .is_generic = signature_fn_info.is_generic,
-                    .is_var_args = signature_fn_info.is_var_args,
-                    .return_type = signature_fn_info.return_type,
-                    .params = .{self_param} ++ signature_fn_info.params,
-                },
-            });
 
             const offset = @offsetOf(BlockLiteral(void), "invoke");
             const base: [*]const u8 = @ptrCast(self);
@@ -129,10 +129,19 @@ fn CopyDisposeBlockDescriptor(comptime Context: type) type {
 }
 
 fn SignatureWithoutBlockLiteral(comptime Signature: type) type {
-    var type_info = @typeInfo(Signature);
-    type_info.@"fn".calling_convention = .auto;
-    type_info.@"fn".params = type_info.@"fn".params[1..];
-    return @Type(type_info);
+    const fn_info = @typeInfo(Signature).@"fn";
+    var param_types: []const type = &.{};
+    var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{};
+    for (fn_info.params[1..]) |p| {
+        param_types = param_types ++ .{p.type.?};
+        param_attrs = param_attrs ++ .{.{}};
+    }
+    return @Fn(
+        param_types,
+        @ptrCast(param_attrs.ptr),
+        fn_info.return_type.?,
+        .{},
+    );
 }
 
 fn validateBlockSignature(comptime Invoke: type, comptime ExpectedLiteralType: type) void {

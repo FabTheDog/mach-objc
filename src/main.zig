@@ -167,5 +167,5 @@ pub const mach = struct {
 
 test {
     @setEvalBranchQuota(10000);
-    std.testing.refAllDeclsRecursive(@This());
+    std.testing.refAllDecls(@This());
 }
