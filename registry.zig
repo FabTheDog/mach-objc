@@ -30,12 +30,12 @@ pub const Type = union(enum) {
 
     pub const Function = struct {
         return_type: *Type,
-        params: std.ArrayList(Type),
+        params: std.array_list.Managed(Type),
     };
 
     pub const Generic = struct {
         base_type: *Type,
-        args: std.ArrayList(Type),
+        args: std.array_list.Managed(Type),
     };
 };
 
@@ -47,7 +47,7 @@ pub const EnumValue = struct {
 
 pub const Enum = struct {
     const Self = @This();
-    const ValueList = std.ArrayList(EnumValue);
+    const ValueList = std.array_list.Managed(EnumValue);
 
     name: []const u8,
     ty: Type,
@@ -94,7 +94,7 @@ pub const Param = struct {
 
 pub const Method = struct {
     const Self = @This();
-    const ParamList = std.ArrayList(Param);
+    const ParamList = std.array_list.Managed(Param);
 
     name: []const u8,
     instance: bool,
@@ -117,10 +117,10 @@ pub const Method = struct {
 
 pub const Container = struct {
     const Self = @This();
-    const ContainerList = std.ArrayList(*Container);
-    const TypeParamList = std.ArrayList(TypeParam);
-    const PropertyList = std.ArrayList(Property);
-    const MethodList = std.ArrayList(Method);
+    const ContainerList = std.array_list.Managed(*Container);
+    const TypeParamList = std.array_list.Managed(TypeParam);
+    const PropertyList = std.array_list.Managed(Property);
+    const MethodList = std.array_list.Managed(Method);
 
     name: []const u8,
     super: ?*Container,

@@ -83,10 +83,10 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
         for (@typeInfo(@TypeOf(args)).@"struct".fields) |field| {
             params = params ++
                 [_]std.builtin.Type.Fn.Param{.{
-                .is_generic = false,
-                .is_noalias = false,
-                .type = field.type,
-            }};
+                    .is_generic = false,
+                    .is_noalias = false,
+                    .type = field.type,
+                }};
         }
         break :init std.builtin.Type{
             .@"fn" = .{

@@ -483,7 +483,7 @@ pub const Parser = struct {
                 return self.parseTypeSuffix(.{
                     .function = .{
                         .return_type = return_type,
-                        .params = std.ArrayList(Type).init(self.allocator),
+                        .params = std.array_list.Managed(Type).init(self.allocator),
                     },
                 }, is_const, true);
             },
@@ -509,8 +509,8 @@ pub const Parser = struct {
         }
     }
 
-    fn parseTypeList(self: *Self) (ParseError || error{OutOfMemory})!std.ArrayList(Type) {
-        var types = std.ArrayList(Type).init(self.allocator);
+    fn parseTypeList(self: *Self) (ParseError || error{OutOfMemory})!std.array_list.Managed(Type) {
+        var types = std.array_list.Managed(Type).init(self.allocator);
 
         try types.append(try self.parseType());
         while (self.lookahead.kind == .comma) {
@@ -928,7 +928,7 @@ pub const Converter = struct {
 
     fn convertMethod(self: *Self, n: std.json.Value) !Method {
         const return_type = try self.convertType(getObject(n, "returnType").?);
-        var params = std.ArrayList(Param).init(registry.allocator);
+        var params = std.array_list.Managed(Param).init(registry.allocator);
 
         for (getArray(n, "inner")) |child| {
             const childKind = getString(child, "kind");
@@ -1006,19 +1006,19 @@ fn Generator(comptime WriterType: type) type {
     return struct {
         const Self = @This();
         const WriteError = WriterType.Error;
-        const EnumList = std.ArrayList(*reg.Enum);
-        const ContainerList = std.ArrayList(*reg.Container);
+        const EnumList = std.array_list.Managed(*reg.Enum);
+        const ContainerList = std.array_list.Managed(*reg.Container);
         const SelectorHashSet = std.StringHashMap(void);
 
         allocator: std.mem.Allocator,
-        writer: WriterType,
+        writer: *WriterType,
         enums: EnumList,
         containers: ContainerList,
         selectors: SelectorHashSet,
         namespace: []const u8,
         allow_methods: []const [2][]const u8,
 
-        fn init(allocator: std.mem.Allocator, writer: WriterType) Self {
+        fn init(allocator: std.mem.Allocator, writer: *WriterType) Self {
             return Self{
                 .allocator = allocator,
                 .writer = writer,
@@ -2312,41 +2312,42 @@ const Framework = enum {
     core_video,
 };
 
-pub fn main() anyerror!void {
-    var general_purpose_allocator = std.heap.GeneralPurposeAllocator(.{ .stack_trace_frames = 8 }){};
-    defer std.debug.assert(general_purpose_allocator.deinit() == .ok);
+pub fn main(init: std.process.Init) anyerror!void {
+    const allocator = init.gpa;
+    const io = init.io;
 
-    const allocator = general_purpose_allocator.allocator();
-
-    const args = try std.process.argsAlloc(allocator);
-    defer std.process.argsFree(allocator, args);
+    var args_iter = try std.process.Args.Iterator.initAllocator(init.minimal.args, allocator);
+    defer args_iter.deinit();
+    _ = args_iter.skip(); // skip argv[0]
 
     var framework: Framework = .metal;
-    var i: usize = 1;
-    while (i < args.len) : (i += 1) {
-        if (std.mem.eql(u8, args[i], "--framework")) {
-            i += 1;
-            if (i == args.len) {
+    while (args_iter.next()) |arg| {
+        if (std.mem.eql(u8, arg, "--framework")) {
+            const fw_arg = args_iter.next() orelse {
                 usage();
                 std.process.exit(1);
-            }
+            };
             framework = blk: {
-                if (std.mem.eql(u8, args[i], "Metal")) break :blk .metal;
-                if (std.mem.eql(u8, args[i], "AVFAudio")) break :blk .avf_audio;
-                if (std.mem.eql(u8, args[i], "CoreMIDI")) break :blk .core_midi;
-                if (std.mem.eql(u8, args[i], "AppKit")) break :blk .app_kit;
-                if (std.mem.eql(u8, args[i], "CoreVideo")) break :blk .core_video;
+                if (std.mem.eql(u8, fw_arg, "Metal")) break :blk .metal;
+                if (std.mem.eql(u8, fw_arg, "AVFAudio")) break :blk .avf_audio;
+                if (std.mem.eql(u8, fw_arg, "CoreMIDI")) break :blk .core_midi;
+                if (std.mem.eql(u8, fw_arg, "AppKit")) break :blk .app_kit;
+                if (std.mem.eql(u8, fw_arg, "CoreVideo")) break :blk .core_video;
                 usage();
                 std.process.exit(1);
             };
         }
     }
 
-    var file = try std.fs.cwd().openFile("headers.json", .{});
-    defer file.close();
+    const file = try std.Io.Dir.openFile(.cwd(), io, "headers.json", .{});
+    defer file.close(io);
 
-    const file_data = try file.readToEndAlloc(allocator, std.math.maxInt(usize));
-    defer allocator.free(file_data);
+    var buf: [4096]u8 = undefined;
+    var rdr = file.reader(io, &buf);
+    var file_list: std.ArrayList(u8) = .empty;
+    defer file_list.deinit(allocator);
+    try rdr.interface.appendRemainingUnlimited(allocator, &file_list);
+    const file_data = file_list.items;
 
     var scanner = std.json.Scanner.initCompleteInput(allocator, file_data);
     defer scanner.deinit();
@@ -2378,8 +2379,9 @@ pub fn main() anyerror!void {
 
     try converter.convert(valueTree.value);
 
-    const stdout = std.io.getStdOut().writer();
-    var generator = Generator(@TypeOf(stdout)).init(allocator, stdout);
+    var stdout_buf: [4096]u8 = undefined;
+    var stdout_writer = std.Io.File.stdout().writerStreaming(io, &stdout_buf);
+    var generator = Generator(std.Io.Writer).init(allocator, &stdout_writer.interface);
     defer generator.deinit();
 
     switch (framework) {
@@ -2390,8 +2392,9 @@ pub fn main() anyerror!void {
         .core_video => try generateCoreVideo(&generator),
     }
     try generator.generate();
+    try stdout_writer.flush();
 }
 
 test {
-    std.testing.refAllDeclsRecursive(@This());
+    std.testing.refAllDecls(@This());
 }

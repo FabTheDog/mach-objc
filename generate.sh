@@ -84,7 +84,7 @@ do
     dst=${pair%% *}
     target=${pair#* }
 
-    zig cc -c MACHAppDelegate.m \
+    zig cc MACHAppDelegate.m \
         -target "$target" \
         -S -Os -fomit-frame-pointer -fobjc-arc -fno-objc-exceptions \
         -o "$dst" \
@@ -112,7 +112,7 @@ do
     dst=${pair%% *}
     target=${pair#* }
 
-    zig cc -c MACHWindowDelegate.m \
+    zig cc MACHWindowDelegate.m \
         -target "$target" \
         -S -Os -fomit-frame-pointer -fobjc-arc -fno-objc-exceptions \
         -o "$dst" \
@@ -140,7 +140,7 @@ do
     dst=${pair%% *}
     target=${pair#* }
 
-    zig cc -c MACHView.m \
+    zig cc MACHView.m \
         -target "$target" \
         -S -Os -fomit-frame-pointer -fobjc-arc -fno-objc-exceptions \
         -o "$dst" \
