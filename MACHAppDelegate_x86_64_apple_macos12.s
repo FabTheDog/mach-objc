@@ -1,5 +1,5 @@
-	.section	__TEXT,__text,regular,pure_instructions
 	.build_version macos, 12, 0
+	.section	__TEXT,__text,regular,pure_instructions
 	.private_extern	"-[MACHAppDelegate setRunBlock:]"
 	.globl	"-[MACHAppDelegate setRunBlock:]"
 "-[MACHAppDelegate setRunBlock:]":

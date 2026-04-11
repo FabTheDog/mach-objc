@@ -1,5 +1,5 @@
-	.section	__TEXT,__text,regular,pure_instructions
 	.build_version macos, 12, 0
+	.section	__TEXT,__text,regular,pure_instructions
 "-[MACHView canBecomeKeyView]":
 
 	.cfi_startproc
@@ -251,10 +251,10 @@ LBB11_1:
 	.cfi_offset %r12, -32
 	.cfi_offset %r14, -24
 	.cfi_offset %r15, -16
+	movq	%rdx, %rbx
 	movq	%rdi, %r14
 	movq	%rdx, %rdi
 	callq	*_objc_retain@GOTPCREL(%rip)
-	movq	%rax, %rbx
 	movq	_OBJC_IVAR_$_MACHView._keyDown_block(%rip), %rax
 	movq	(%r14,%rax), %rdi
 	testq	%rdi, %rdi
@@ -312,10 +312,10 @@ LBB12_2:
 	.cfi_offset %r14, -32
 	.cfi_offset %r15, -24
 	.cfi_offset %rbp, -16
+	movq	%rdx, %r12
 	movq	%rdi, 80(%rsp)
 	movq	%rdx, %rdi
 	callq	*_objc_retain@GOTPCREL(%rip)
-	movq	%rax, %r14
 	movq	_NSApp@GOTPCREL(%rip), %rax
 	movq	(%rax), %rdi
 	movq	_OBJC_SELECTOR_REFERENCES_.4(%rip), %rsi
@@ -328,25 +328,25 @@ LBB12_2:
 	movq	_OBJC_SELECTOR_REFERENCES_.7(%rip), %rsi
 	callq	*%rbx
 	movq	_OBJC_SELECTOR_REFERENCES_.9(%rip), %rsi
-	movq	%r14, %rdi
+	movq	%r12, %rdi
 	movq	%rax, %rdx
 	callq	*%rbx
 	testb	%al, %al
-	movq	%r14, 72(%rsp)
+	movq	%r12, 72(%rsp)
 	je	LBB13_2
 	movq	_OBJC_SELECTOR_REFERENCES_.11(%rip), %rsi
-	movq	%r14, %rdi
+	movq	%r12, %rdi
 	callq	*_objc_msgSend@GOTPCREL(%rip)
 	movq	%rax, %rdi
 	callq	_objc_retainAutoreleasedReturnValue
+	movq	%rax, %r12
 	jmp	LBB13_3
 LBB13_2:
-	movq	%r14, %rdi
+	movq	%r12, %rdi
 	callq	*_objc_retain@GOTPCREL(%rip)
 LBB13_3:
-	movq	%rax, %r12
 	movq	_OBJC_SELECTOR_REFERENCES_.13(%rip), %rsi
-	movq	%rax, %rdi
+	movq	%r12, %rdi
 	callq	*_objc_msgSend@GOTPCREL(%rip)
 	movq	$0, 56(%rsp)
 	movq	%rax, 64(%rsp)

@@ -1,5 +1,5 @@
-	.section	__TEXT,__text,regular,pure_instructions
 	.build_version macos, 12, 0
+	.section	__TEXT,__text,regular,pure_instructions
 	.p2align	2
 "-[MACHView canBecomeKeyView]":
 	.cfi_startproc
