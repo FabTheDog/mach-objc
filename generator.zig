@@ -1404,11 +1404,24 @@ fn Generator(comptime WriterType: type) type {
                             try self.writer.writeAll(", ");
                         try self.generateType(param_ty);
                     }
-                    try self.writer.writeAll(") callconv(.C) ");
+                    try self.writer.writeAll(") callconv(.c) ");
                     try self.generateType(f.return_type.*);
                 },
                 .generic => |g| {
-                    try self.generateType(g.base_type.*);
+                    // Generic types (like Dictionary(K,V), Array(T)) are defined as
+                    // functions in foundation.zig, so always qualify with namespace
+                    // prefix to avoid resolving to a local non-generic opaque type.
+                    switch (g.base_type.*) {
+                        .name => |n| {
+                            const namespace = getNamespace(n);
+                            if (namespace.len > 0) {
+                                try self.generateLower(namespace);
+                                try self.writer.writeAll(".");
+                            }
+                            try self.writer.writeAll(trimNamespace(n));
+                        },
+                        else => try self.generateType(g.base_type.*),
+                    }
                     try self.writer.writeAll("(");
                     for (g.args.items, 0..) |arg, i| {
                         if (i > 0)

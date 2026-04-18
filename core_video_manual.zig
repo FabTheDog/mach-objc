@@ -59,7 +59,7 @@ pub const mainDisplayID = CGMainDisplayID;
 
 extern fn CVDisplayLinkSetOutputCallback(
     *CVDisplayLinkRef,
-    *const fn (*CVDisplayLinkRef, *const CVTimeStamp, *const CVTimeStamp, u64, *u64, ?*anyopaque) callconv(.C) CVReturn,
+    *const fn (*CVDisplayLinkRef, *const CVTimeStamp, *const CVTimeStamp, u64, *u64, ?*anyopaque) callconv(.c) CVReturn,
     ?*anyopaque,
 ) CVReturn;
 pub const setOutputCallback = CVDisplayLinkSetOutputCallback;

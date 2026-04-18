@@ -46,6 +46,10 @@ pub fn build(b: *std.Build) void {
     if (target.result.os.tag == .macos) {
         unit_tests.root_module.linkFramework("AppKit", .{});
         unit_tests.root_module.linkFramework("CoreVideo", .{});
+        unit_tests.root_module.linkFramework("Metal", .{});
+        unit_tests.root_module.linkFramework("QuartzCore", .{});
+        unit_tests.root_module.linkFramework("AVFAudio", .{});
+        unit_tests.root_module.linkFramework("CoreMIDI", .{});
         if (target.result.cpu.arch == .x86_64) {
             unit_tests.root_module.addAssemblyFile(b.path("MACHAppDelegate_x86_64_apple_macos12.s"));
             unit_tests.root_module.addAssemblyFile(b.path("MACHWindowDelegate_x86_64_apple_macos12.s"));
