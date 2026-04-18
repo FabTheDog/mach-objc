@@ -2,7 +2,7 @@ const builtin = @import("builtin");
 const std = @import("std");
 
 pub extern "System" fn dispatch_async(queue: *anyopaque, work: *const Block(fn (*BlockLiteral(void)) void)) void;
-pub extern "System" fn dispatch_async_f(queue: *anyopaque, context: ?*anyopaque, work: *const fn (context: ?*anyopaque) callconv(.C) void) void;
+pub extern "System" fn dispatch_async_f(queue: *anyopaque, context: ?*anyopaque, work: *const fn (context: ?*anyopaque) callconv(.c) void) void;
 pub extern "System" fn @"dispatch_assert_queue$V2"(queue: *anyopaque) void;
 pub extern "System" var _dispatch_main_q: anyopaque;
 
@@ -11,7 +11,7 @@ pub const dispatch_source_type_t = *const opaque {};
 pub extern "System" var _dispatch_source_type_data_add: anyopaque;
 
 pub extern "System" fn dispatch_source_create(source_type: dispatch_source_type_t, handle: usize, mask: usize, queue: *anyopaque) dispatch_source_t;
-pub extern "System" fn dispatch_source_set_event_handler_f(source: dispatch_source_t, handler: *const fn (?*anyopaque) callconv(.C) void) void;
+pub extern "System" fn dispatch_source_set_event_handler_f(source: dispatch_source_t, handler: *const fn (?*anyopaque) callconv(.c) void) void;
 pub extern "System" fn dispatch_set_context(obj: *anyopaque, context: ?*anyopaque) void;
 pub extern "System" fn dispatch_resume(obj: *anyopaque) void;
 pub extern "System" fn dispatch_source_cancel(source: dispatch_source_t) void;
@@ -112,8 +112,8 @@ fn CopyDisposeBlockDescriptor(comptime Context: type) type {
         copy: *const CopyFn,
         dispose: *const DisposeFn,
 
-        pub const CopyFn = fn (dst: *BlockLiteral(Context), src: *const BlockLiteral(Context)) callconv(.C) void;
-        pub const DisposeFn = fn (block: *const BlockLiteral(Context)) callconv(.C) void;
+        pub const CopyFn = fn (dst: *BlockLiteral(Context), src: *const BlockLiteral(Context)) callconv(.c) void;
+        pub const DisposeFn = fn (block: *const BlockLiteral(Context)) callconv(.c) void;
 
         fn static(comptime size: c_ulong, comptime copy: CopyFn, comptime dispose: DisposeFn) *const CopyDisposeBlockDescriptor {
             const Static = struct {
@@ -164,8 +164,8 @@ fn validateBlockSignature(comptime Invoke: type, comptime ExpectedLiteralType: t
 pub fn stackBlockLiteral(
     invoke: anytype,
     context: anytype,
-    comptime copy: ?fn (dst: *BlockLiteral(@TypeOf(context)), src: *const BlockLiteral(@TypeOf(context))) callconv(.C) void,
-    comptime dispose: ?fn (block: *const BlockLiteral(@TypeOf(context))) callconv(.C) void,
+    comptime copy: ?fn (dst: *BlockLiteral(@TypeOf(context)), src: *const BlockLiteral(@TypeOf(context))) callconv(.c) void,
+    comptime dispose: ?fn (block: *const BlockLiteral(@TypeOf(context))) callconv(.c) void,
 ) BlockLiteralWithSignature(@TypeOf(context), SignatureWithoutBlockLiteral(@TypeOf(invoke))) {
     const Context = @TypeOf(context);
     const Literal = BlockLiteral(Context);

@@ -69,10 +69,10 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
 
     const FnType = comptime init: {
         var param_types: []const type = &.{ @TypeOf(receiver), [*:0]c_char };
-        var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{ .{}, .{} };
+        var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{ std.builtin.Type.Fn.Param.Attributes{}, std.builtin.Type.Fn.Param.Attributes{} };
         for (@typeInfo(@TypeOf(args)).@"struct".fields) |field| {
             param_types = param_types ++ .{field.type};
-            param_attrs = param_attrs ++ .{.{}};
+            param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
         }
         break :init @Fn(
             param_types,
