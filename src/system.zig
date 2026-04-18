@@ -26,10 +26,10 @@ pub fn Block(comptime Signature: type) type {
         pub fn invoke(self: *@This(), args: std.meta.ArgsTuple(Signature)) signature_fn_info.return_type.? {
             const SignatureForInvoke = comptime init: {
                 var param_types: []const type = &.{*@This()};
-                var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{.{}};
+                var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{std.builtin.Type.Fn.Param.Attributes{}};
                 for (signature_fn_info.params) |p| {
                     param_types = param_types ++ .{p.type.?};
-                    param_attrs = param_attrs ++ .{.{}};
+                    param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
                 }
                 break :init @Fn(
                     param_types,
@@ -134,7 +134,7 @@ fn SignatureWithoutBlockLiteral(comptime Signature: type) type {
     var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{};
     for (fn_info.params[1..]) |p| {
         param_types = param_types ++ .{p.type.?};
-        param_attrs = param_attrs ++ .{.{}};
+        param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
     }
     return @Fn(
         param_types,

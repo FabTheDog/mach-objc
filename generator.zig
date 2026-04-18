@@ -2561,17 +2561,14 @@ fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_di
         };
         for (targets) |t| {
             const zig_cc_stdout = try runCommand(allocator, io, &.{
-                "zig",      "cc",
-                spec.source,
-                "-target",  t.target,
-                "-S",       "-Os",
-                "-fomit-frame-pointer",
-                "-fobjc-arc",
-                "-fno-objc-exceptions",
-                "-o",       tmp_asm_path,
-                "-iframework",
-                frameworks_dir,
-                "-isystem", include_dir,
+                "zig",         "cc",
+                spec.source,   "-target",
+                t.target,      "-S",
+                "-Os",         "-fomit-frame-pointer",
+                "-fobjc-arc",  "-fno-objc-exceptions",
+                "-o",          tmp_asm_path,
+                "-iframework", frameworks_dir,
+                "-isystem",    include_dir,
             });
             allocator.free(zig_cc_stdout);
 
@@ -2593,10 +2590,10 @@ fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_di
 
     // Run zig fmt on generated files
     const fmt_stdout = try runCommand(allocator, io, &.{
-        "zig",              "fmt",
-        "src/metal.zig",    "src/avf_audio.zig",
-        "src/core_midi.zig",
-        "src/app_kit.zig",  "src/core_video.zig",
+        "zig",                "fmt",
+        "src/metal.zig",      "src/avf_audio.zig",
+        "src/core_midi.zig",  "src/app_kit.zig",
+        "src/core_video.zig",
     });
     allocator.free(fmt_stdout);
 }
