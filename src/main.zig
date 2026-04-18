@@ -166,6 +166,21 @@ pub const mach = struct {
 };
 
 test {
-    @setEvalBranchQuota(10000);
-    std.testing.refAllDecls(@This());
+    @setEvalBranchQuota(100000);
+    refAllDeclsRecursive(@This());
+}
+
+fn refAllDeclsRecursive(comptime T: type) void {
+    inline for (comptime std.meta.declarations(T)) |decl| {
+        const DeclType = @TypeOf(@field(T, decl.name));
+        if (DeclType == type) {
+            const Inner = @field(T, decl.name);
+            const inner_info = @typeInfo(Inner);
+            if (inner_info == .@"struct" or inner_info == .@"opaque") {
+                refAllDeclsRecursive(Inner);
+            }
+        } else {
+            _ = &@field(T, decl.name);
+        }
+    }
 }
