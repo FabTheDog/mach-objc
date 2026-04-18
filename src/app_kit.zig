@@ -581,8 +581,8 @@ pub const Screen = opaque {
     pub const alloc = InternalInfo.alloc;
     pub const allocInit = InternalInfo.allocInit;
 
-    pub fn screens() *Array(*Screen) {
-        return objc.msgSend(@This().InternalInfo.class(), "screens", *Array(*Screen), .{});
+    pub fn screens() *ns.Array(*Screen) {
+        return objc.msgSend(@This().InternalInfo.class(), "screens", *ns.Array(*Screen), .{});
     }
     pub fn mainScreen() ?*Screen {
         return objc.msgSend(@This().InternalInfo.class(), "mainScreen", ?*Screen, .{});
@@ -602,7 +602,7 @@ pub const TrackingArea = opaque {
     pub const alloc = InternalInfo.alloc;
     pub const allocInit = InternalInfo.allocInit;
 
-    pub fn initWithRect_options_owner_userInfo(self_: *@This(), rect_: Rect, options_: TrackingAreaOptions, owner_: ?*objc.Id, userInfo_: ?*Dictionary(*objc.Id, *objc.Id)) *@This() {
+    pub fn initWithRect_options_owner_userInfo(self_: *@This(), rect_: Rect, options_: TrackingAreaOptions, owner_: ?*objc.Id, userInfo_: ?*ns.Dictionary(*objc.Id, *objc.Id)) *@This() {
         return objc.msgSend(self_, "initWithRect:options:owner:userInfo:", *@This(), .{ rect_, options_, owner_, userInfo_ });
     }
     pub fn rect(self_: *@This()) Rect {
@@ -614,8 +614,8 @@ pub const TrackingArea = opaque {
     pub fn owner(self_: *@This()) ?*objc.Id {
         return objc.msgSend(self_, "owner", ?*objc.Id, .{});
     }
-    pub fn userInfo(self_: *@This()) ?*Dictionary(*objc.Id, *objc.Id) {
-        return objc.msgSend(self_, "userInfo", ?*Dictionary(*objc.Id, *objc.Id), .{});
+    pub fn userInfo(self_: *@This()) ?*ns.Dictionary(*objc.Id, *objc.Id) {
+        return objc.msgSend(self_, "userInfo", ?*ns.Dictionary(*objc.Id, *objc.Id), .{});
     }
 };
 
