@@ -39,6 +39,7 @@ pub const Point = cg.Point;
 pub const Size = cg.Size;
 pub const RunLoopMode = *String;
 pub extern const NSDefaultRunLoopMode: RunLoopMode;
+pub extern const NSRunLoopCommonModes: RunLoopMode;
 pub const PrinterPaperName = *String;
 pub const PrintJobDispositionValue = *String;
 pub const InterfaceStyle = UInteger;

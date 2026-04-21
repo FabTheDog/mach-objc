@@ -8,6 +8,7 @@ pub const ErrorDomain = *String;
 pub const ErrorUserInfoKey = *String;
 pub const Integer = isize;
 pub const NotificationName = *String;
+pub const RunLoopMode = *String;
 pub const TimeInterval = f64;
 pub const UInteger = usize;
 pub const unichar = u16;
@@ -643,6 +644,18 @@ pub const ObjectInterface = opaque {
     pub const new = InternalInfo.new;
     pub const alloc = InternalInfo.alloc;
     pub const allocInit = InternalInfo.allocInit;
+};
+
+pub const RunLoop = opaque {
+    pub const InternalInfo = objc.ExternClass("NSRunLoop", @This(), ObjectInterface, &.{});
+    pub const as = InternalInfo.as;
+    pub const retain = InternalInfo.retain;
+    pub const release = InternalInfo.release;
+    pub const autorelease = InternalInfo.autorelease;
+
+    pub fn mainRunLoop() *RunLoop {
+        return objc.msgSend(@This().InternalInfo.class(), "mainRunLoop", *RunLoop, .{});
+    }
 };
 
 pub const ProcessInfo = opaque {

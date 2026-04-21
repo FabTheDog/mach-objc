@@ -162,6 +162,10 @@ pub const mach = struct {
             *const fn (*View, *foundation.Block(fn (*app_kit.Event) void)) callconv(.c) void,
             .{ .name = "\x01-[MACHView setBlock_scrollWheel:]" },
         );
+
+        pub fn displayLinkWithTarget(self_: *View, target_: *objc.Id, selector_: *objc.Sel) *quartz_core.DisplayLink {
+            return objc.msgSend(self_, "displayLinkWithTarget:selector:", *quartz_core.DisplayLink, .{ target_, selector_ });
+        }
     };
 };
 

@@ -15,6 +15,7 @@ pub fn build(b: *std.Build) void {
     if (target.result.os.tag == .macos) {
         module.linkFramework("AppKit", .{});
         module.linkFramework("CoreVideo", .{});
+        module.linkFramework("QuartzCore", .{});
         if (target.result.cpu.arch == .x86_64) {
             module.addAssemblyFile(b.path("MACHAppDelegate_x86_64_apple_macos12.s"));
             module.addAssemblyFile(b.path("MACHWindowDelegate_x86_64_apple_macos12.s"));

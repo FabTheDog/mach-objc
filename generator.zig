@@ -1951,6 +1951,58 @@ fn generateCoreVideo(generator: anytype) !void {
     };
 }
 
+fn generateQuartzCore(generator: anytype) !void {
+    generator.namespace = "CA";
+    generator.allow_methods = &.{
+        // CALayer
+        [2][]const u8{ "CALayer", "setOpaque" },
+        [2][]const u8{ "CALayer", "setOpacity" },
+
+        // CAMetalLayer
+        [2][]const u8{ "CAMetalLayer", "nextDrawable" },
+        [2][]const u8{ "CAMetalLayer", "device" },
+        [2][]const u8{ "CAMetalLayer", "setDevice" },
+        [2][]const u8{ "CAMetalLayer", "preferredDevice" },
+        [2][]const u8{ "CAMetalLayer", "pixelFormat" },
+        [2][]const u8{ "CAMetalLayer", "setPixelFormat" },
+        [2][]const u8{ "CAMetalLayer", "framebufferOnly" },
+        [2][]const u8{ "CAMetalLayer", "setFramebufferOnly" },
+        [2][]const u8{ "CAMetalLayer", "drawableSize" },
+        [2][]const u8{ "CAMetalLayer", "setDrawableSize" },
+        [2][]const u8{ "CAMetalLayer", "maximumDrawableCount" },
+        [2][]const u8{ "CAMetalLayer", "setMaximumDrawableCount" },
+        [2][]const u8{ "CAMetalLayer", "presentsWithTransaction" },
+        [2][]const u8{ "CAMetalLayer", "setPresentsWithTransaction" },
+        [2][]const u8{ "CAMetalLayer", "colorspace" },
+        [2][]const u8{ "CAMetalLayer", "setColorspace" },
+        [2][]const u8{ "CAMetalLayer", "wantsExtendedDynamicRangeContent" },
+        [2][]const u8{ "CAMetalLayer", "setWantsExtendedDynamicRangeContent" },
+        [2][]const u8{ "CAMetalLayer", "displaySyncEnabled" },
+        [2][]const u8{ "CAMetalLayer", "setDisplaySyncEnabled" },
+        [2][]const u8{ "CAMetalLayer", "allowsNextDrawableTimeout" },
+        [2][]const u8{ "CAMetalLayer", "setAllowsNextDrawableTimeout" },
+
+        // CAMetalDrawable
+        [2][]const u8{ "CAMetalDrawable", "texture" },
+        [2][]const u8{ "CAMetalDrawable", "layer" },
+
+        // CADisplayLink
+        [2][]const u8{ "CADisplayLink", "addToRunLoop:forMode" },
+        [2][]const u8{ "CADisplayLink", "removeFromRunLoop:forMode" },
+        [2][]const u8{ "CADisplayLink", "invalidate" },
+        [2][]const u8{ "CADisplayLink", "timestamp" },
+        [2][]const u8{ "CADisplayLink", "duration" },
+        [2][]const u8{ "CADisplayLink", "targetTimestamp" },
+        [2][]const u8{ "CADisplayLink", "isPaused" },
+        [2][]const u8{ "CADisplayLink", "setPaused" },
+    };
+
+    try generator.addInterface("CALayer");
+    try generator.addInterface("CAMetalLayer");
+    try generator.addProtocol("CAMetalDrawable");
+    try generator.addInterface("CADisplayLink");
+}
+
 fn generateAppKit(generator: anytype) !void {
     generator.namespace = "NS";
     generator.allow_methods = &.{
@@ -2344,6 +2396,14 @@ const framework_specs = [_]FrameworkSpec{
         .extra_clang_args = &.{},
     },
     .{
+        .name = "QuartzCore",
+        .tag = .quartz_core,
+        .manual_path = "quartz_core_manual.zig",
+        .output_path = "src/quartz_core.zig",
+        .header_content = .{ .inline_text = "\n#include <QuartzCore/QuartzCore.h>\n" },
+        .extra_clang_args = &.{"-Wno-availability"},
+    },
+    .{
         .name = "AppKit",
         .tag = .app_kit,
         .manual_path = "app_kit_manual.zig",
@@ -2540,6 +2600,7 @@ fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: Framewor
         .metal => try generateMetal(&generator),
         .avf_audio => try generateAVFAudio(&generator),
         .core_midi => try generateCoreMIDI(&generator),
+        .quartz_core => try generateQuartzCore(&generator),
         .app_kit => try generateAppKit(&generator),
         .core_video => try generateCoreVideo(&generator),
     }
@@ -2590,10 +2651,10 @@ fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_di
 
     // Run zig fmt on generated files
     const fmt_stdout = try runCommand(allocator, io, &.{
-        "zig",                "fmt",
-        "src/metal.zig",      "src/avf_audio.zig",
-        "src/core_midi.zig",  "src/app_kit.zig",
-        "src/core_video.zig",
+        "zig",               "fmt",
+        "src/metal.zig",     "src/avf_audio.zig",
+        "src/core_midi.zig", "src/quartz_core.zig",
+        "src/app_kit.zig",   "src/core_video.zig",
     });
     allocator.free(fmt_stdout);
 }
@@ -2639,6 +2700,7 @@ fn generateSingleFramework(allocator: std.mem.Allocator, io: std.Io, framework: 
         .metal => try generateMetal(&generator),
         .avf_audio => try generateAVFAudio(&generator),
         .core_midi => try generateCoreMIDI(&generator),
+        .quartz_core => try generateQuartzCore(&generator),
         .app_kit => try generateAppKit(&generator),
         .core_video => try generateCoreVideo(&generator),
     }
@@ -2651,7 +2713,7 @@ fn usage() void {
         \\mach-objc-generator [options]
         \\
         \\Options:
-        \\  --framework  Metal,AVFAudio,CoreMIDI,AppKit,CoreVideo  generate a single framework to stdout
+        \\  --framework  Metal,AVFAudio,CoreMIDI,QuartzCore,AppKit,CoreVideo  generate a single framework to stdout
         \\  --generate-all                                         generate all frameworks and assembly files
         \\  --frameworks-dir <path>                                path to Frameworks directory (used with --generate-all)
         \\  --include-dir <path>                                   path to include directory (used with --generate-all)
@@ -2664,6 +2726,7 @@ const Framework = enum {
     metal,
     avf_audio,
     core_midi,
+    quartz_core,
     app_kit,
     core_video,
 };
@@ -2691,6 +2754,7 @@ pub fn main(init: std.process.Init) anyerror!void {
                 if (std.mem.eql(u8, fw_arg, "Metal")) break :blk .metal;
                 if (std.mem.eql(u8, fw_arg, "AVFAudio")) break :blk .avf_audio;
                 if (std.mem.eql(u8, fw_arg, "CoreMIDI")) break :blk .core_midi;
+                if (std.mem.eql(u8, fw_arg, "QuartzCore")) break :blk .quartz_core;
                 if (std.mem.eql(u8, fw_arg, "AppKit")) break :blk .app_kit;
                 if (std.mem.eql(u8, fw_arg, "CoreVideo")) break :blk .core_video;
                 usage();
