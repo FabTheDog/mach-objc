@@ -1,5 +1,6 @@
 #import <AppKit/AppKit.h>
 #import <Foundation/Foundation.h>
+#import <QuartzCore/QuartzCore.h>
 
 @interface MACHView : NSView
 @end
@@ -16,6 +17,7 @@
   void (^_insertText_block)(NSEvent *, uint32_t);
   void (^_render_block)(void);
   NSTrackingArea *trackingArea;
+  CADisplayLink *_displayLink;
 }
 
 - (BOOL)canBecomeKeyView {
@@ -180,6 +182,23 @@
 - (void)magnifyWithEvent:(NSEvent *)event {
   if (_magnify_block)
     _magnify_block(event);
+}
+
+- (void)displayLinkFired:(CADisplayLink *)link {
+  (void)link;
+  if (_render_block) _render_block();
+}
+
+- (BOOL)startDisplayLink __attribute__((objc_direct)) {
+  if (_displayLink) return YES;
+  _displayLink = [self displayLinkWithTarget:self selector:@selector(displayLinkFired:)];
+  [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
+  return YES;
+}
+
+- (void)stopDisplayLink __attribute__((objc_direct)) {
+  [_displayLink invalidate];
+  _displayLink = nil;
 }
 
 // Add this method to prevent default macos keybind operations

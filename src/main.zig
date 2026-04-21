@@ -163,9 +163,21 @@ pub const mach = struct {
             .{ .name = "\x01-[MACHView setBlock_scrollWheel:]" },
         );
 
-        pub fn displayLinkWithTarget(self_: *View, target_: *objc.Id, selector_: *objc.Sel) *quartz_core.DisplayLink {
-            return objc.msgSend(self_, "displayLinkWithTarget:selector:", *quartz_core.DisplayLink, .{ target_, selector_ });
+        pub fn startDisplayLink(self: *View) bool {
+            return method_startDisplayLink(self);
         }
+        const method_startDisplayLink = @extern(
+            *const fn (*View) callconv(.c) bool,
+            .{ .name = "\x01-[MACHView startDisplayLink]" },
+        );
+
+        pub fn stopDisplayLink(self: *View) void {
+            method_stopDisplayLink(self);
+        }
+        const method_stopDisplayLink = @extern(
+            *const fn (*View) callconv(.c) void,
+            .{ .name = "\x01-[MACHView stopDisplayLink]" },
+        );
     };
 };
 
