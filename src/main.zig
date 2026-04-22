@@ -83,11 +83,11 @@ pub const mach = struct {
             return objc.msgSend(self_, "setLayer:", void, .{layer_});
         }
 
-        pub fn setBlock_render(self: *View, block: *foundation.Block(fn () void)) void {
+        pub fn setBlock_render(self: *View, block: *foundation.Block(fn (*quartz_core.MetalDrawable) void)) void {
             method_render(self, block);
         }
         const method_render = @extern(
-            *const fn (*View, *foundation.Block(fn () void)) callconv(.c) void,
+            *const fn (*View, *foundation.Block(fn (*quartz_core.MetalDrawable) void)) callconv(.c) void,
             .{ .name = "\x01-[MACHView setBlock_render:]" },
         );
 

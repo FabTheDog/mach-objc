@@ -2,7 +2,7 @@
 #import <Foundation/Foundation.h>
 #import <QuartzCore/QuartzCore.h>
 
-@interface MACHView : NSView
+@interface MACHView : NSView <CAMetalDisplayLinkDelegate>
 @end
 
 @implementation MACHView {
@@ -15,9 +15,9 @@
   void (^_scrollWheel_block)(NSEvent *);
   void (^_magnify_block)(NSEvent *);
   void (^_insertText_block)(NSEvent *, uint32_t);
-  void (^_render_block)(void);
+  void (^_render_block)(id<CAMetalDrawable>);
   NSTrackingArea *trackingArea;
-  CADisplayLink *_displayLink;
+  CAMetalDisplayLink *_displayLink;
 }
 
 - (BOOL)canBecomeKeyView {
@@ -28,7 +28,7 @@
   return YES;
 }
 
-- (void)setBlock_render:(void (^)(void))render_block
+- (void)setBlock_render:(void (^)(id<CAMetalDrawable>))render_block
     __attribute__((objc_direct)) {
   _render_block = render_block;
 }
@@ -184,14 +184,23 @@
     _magnify_block(event);
 }
 
-- (void)displayLinkFired:(CADisplayLink *)link {
+- (void)metalDisplayLink:(CAMetalDisplayLink *)link
+             needsUpdate:(CAMetalDisplayLinkUpdate *)update {
   (void)link;
-  if (_render_block) _render_block();
+  if (_render_block) _render_block(update.drawable);
 }
 
 - (BOOL)startDisplayLink __attribute__((objc_direct)) {
   if (_displayLink) return YES;
-  _displayLink = [self displayLinkWithTarget:self selector:@selector(displayLinkFired:)];
+
+  CALayer *baseLayer = self.layer;
+  if (![baseLayer isKindOfClass:[CAMetalLayer class]]) return NO;
+
+  CAMetalLayer *metalLayer = (CAMetalLayer *)baseLayer;
+  _displayLink = [[CAMetalDisplayLink alloc] initWithMetalLayer:metalLayer];
+  if (!_displayLink) return NO;
+
+  _displayLink.delegate = self;
   [_displayLink addToRunLoop:[NSRunLoop mainRunLoop] forMode:NSRunLoopCommonModes];
   return YES;
 }

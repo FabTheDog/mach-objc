@@ -1995,12 +1995,28 @@ fn generateQuartzCore(generator: anytype) !void {
         [2][]const u8{ "CADisplayLink", "targetTimestamp" },
         [2][]const u8{ "CADisplayLink", "isPaused" },
         [2][]const u8{ "CADisplayLink", "setPaused" },
+
+        // CAMetalDisplayLink
+        [2][]const u8{ "CAMetalDisplayLink", "initWithMetalLayer" },
+        [2][]const u8{ "CAMetalDisplayLink", "addToRunLoop:forMode" },
+        [2][]const u8{ "CAMetalDisplayLink", "removeFromRunLoop:forMode" },
+        [2][]const u8{ "CAMetalDisplayLink", "invalidate" },
+        [2][]const u8{ "CAMetalDisplayLink", "isPaused" },
+        [2][]const u8{ "CAMetalDisplayLink", "setPaused" },
+
+        // CAMetalDisplayLinkUpdate
+        [2][]const u8{ "CAMetalDisplayLinkUpdate", "drawable" },
+        [2][]const u8{ "CAMetalDisplayLinkUpdate", "targetTimestamp" },
+        [2][]const u8{ "CAMetalDisplayLinkUpdate", "targetPresentationTimestamp" },
     };
 
     try generator.addInterface("CALayer");
     try generator.addInterface("CAMetalLayer");
     try generator.addProtocol("CAMetalDrawable");
     try generator.addInterface("CADisplayLink");
+    try generator.addInterface("CAMetalDisplayLink");
+    try generator.addInterface("CAMetalDisplayLinkUpdate");
+    try generator.addProtocol("CAMetalDisplayLinkDelegate");
 }
 
 fn generateAppKit(generator: anytype) !void {
