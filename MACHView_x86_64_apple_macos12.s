@@ -601,15 +601,39 @@ LBB27_1:
 	retq
 	.cfi_endproc
 
-"-[MACHView displayLinkFired:]":
+"-[MACHView metalDisplayLink:needsUpdate:]":
 
 	.cfi_startproc
+	pushq	%r14
+	.cfi_def_cfa_offset 16
+	pushq	%rbx
+	.cfi_def_cfa_offset 24
+	pushq	%rax
+	.cfi_def_cfa_offset 32
+	.cfi_offset %rbx, -24
+	.cfi_offset %r14, -16
 	movq	_OBJC_IVAR_$_MACHView._render_block(%rip), %rax
-	movq	(%rdi,%rax), %rdi
-	testq	%rdi, %rdi
+	movq	(%rdi,%rax), %rbx
+	testq	%rbx, %rbx
 	je	LBB28_1
-	jmpq	*16(%rdi)
+	movq	_OBJC_SELECTOR_REFERENCES_.17(%rip), %rsi
+	movq	%rcx, %rdi
+	callq	*_objc_msgSend@GOTPCREL(%rip)
+	movq	%rax, %rdi
+	callq	_objc_retainAutoreleasedReturnValue
+	movq	%rax, %r14
+	movq	%rbx, %rdi
+	movq	%rax, %rsi
+	callq	*16(%rbx)
+	movq	%r14, %rdi
+	addq	$8, %rsp
+	popq	%rbx
+	popq	%r14
+	jmpq	*_objc_release@GOTPCREL(%rip)
 LBB28_1:
+	addq	$8, %rsp
+	popq	%rbx
+	popq	%r14
 	retq
 	.cfi_endproc
 
@@ -634,41 +658,76 @@ LBB28_1:
 	.cfi_offset %rbp, -16
 	testq	%rdi, %rdi
 	je	LBB29_1
-	movq	%rdi, %rbx
+	movq	%rdi, %r14
 	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rax
 	movb	$1, %bpl
 	cmpq	$0, (%rdi,%rax)
-	jne	LBB29_4
-	movq	_OBJC_SELECTOR_REFERENCES_.17(%rip), %rcx
+	jne	LBB29_10
 	movq	_OBJC_SELECTOR_REFERENCES_.19(%rip), %rsi
-	movq	_objc_msgSend@GOTPCREL(%rip), %r15
-	movq	%rbx, %rdi
-	movq	%rbx, %rdx
-	callq	*%r15
-	movq	%rax, %rdi
-	callq	_objc_retainAutoreleasedReturnValue
-	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rcx
-	movq	(%rbx,%rcx), %rdi
-	movq	%rax, (%rbx,%rcx)
-	movq	_objc_release@GOTPCREL(%rip), %r12
-	callq	*%r12
-	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rax
-	movq	(%rbx,%rax), %rbx
-	movq	_OBJC_CLASSLIST_REFERENCES_$_.20(%rip), %rdi
-	movq	_OBJC_SELECTOR_REFERENCES_.22(%rip), %rsi
-	callq	*%r15
-	movq	%rax, %rdi
-	callq	_objc_retainAutoreleasedReturnValue
-	movq	%rax, %r14
-	movq	_NSRunLoopCommonModes@GOTPCREL(%rip), %rax
-	movq	(%rax), %rcx
-	movq	_OBJC_SELECTOR_REFERENCES_.24(%rip), %rsi
-	movq	%rbx, %rdi
-	movq	%r14, %rdx
-	callq	*%r15
+	movq	_objc_msgSend@GOTPCREL(%rip), %r12
 	movq	%r14, %rdi
 	callq	*%r12
+	movq	%rax, %rdi
+	callq	_objc_retainAutoreleasedReturnValue
+	movq	%rax, %rbx
+	movq	_OBJC_CLASSLIST_REFERENCES_$_.20(%rip), %rdi
+	movq	_OBJC_SELECTOR_REFERENCES_.7(%rip), %rsi
+	callq	*%r12
+	movq	_OBJC_SELECTOR_REFERENCES_.9(%rip), %rsi
+	movq	%rbx, %rdi
+	movq	%rax, %rdx
+	callq	*%r12
+	testb	%al, %al
+	je	LBB29_4
+	movq	%rbx, %rdi
+	callq	*_objc_retain@GOTPCREL(%rip)
+	movq	_OBJC_CLASSLIST_REFERENCES_$_.21(%rip), %rdi
+	callq	_objc_alloc
+	movq	_OBJC_SELECTOR_REFERENCES_.23(%rip), %rsi
+	movq	%rax, %rdi
+	movq	%rbx, %rdx
+	callq	*_objc_msgSend@GOTPCREL(%rip)
+	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rcx
+	movq	(%r14,%rcx), %rdi
+	movq	%rax, (%r14,%rcx)
+	callq	*_objc_release@GOTPCREL(%rip)
+	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rax
+	movq	(%r14,%rax), %rdi
+	testq	%rdi, %rdi
+	je	LBB29_6
+	movq	_OBJC_SELECTOR_REFERENCES_.25(%rip), %rsi
+	movq	%r14, %rdx
+	callq	*%r12
+	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rax
+	movq	(%r14,%rax), %r14
+	movq	_OBJC_CLASSLIST_REFERENCES_$_.26(%rip), %rdi
+	movq	_OBJC_SELECTOR_REFERENCES_.28(%rip), %rsi
+	callq	*%r12
+	movq	%rax, %rdi
+	callq	_objc_retainAutoreleasedReturnValue
+	movq	%rax, %r15
+	movq	_NSRunLoopCommonModes@GOTPCREL(%rip), %rax
+	movq	(%rax), %rcx
+	movq	_OBJC_SELECTOR_REFERENCES_.30(%rip), %rsi
+	movq	%r14, %rdi
+	movq	%r15, %rdx
+	callq	*%r12
+	movq	%r15, %rdi
+	callq	*_objc_release@GOTPCREL(%rip)
+	movb	$1, %bpl
+	jmp	LBB29_8
 LBB29_4:
+	xorl	%ebp, %ebp
+	jmp	LBB29_9
+LBB29_6:
+	xorl	%ebp, %ebp
+LBB29_8:
+	movq	%rbx, %rdi
+	callq	*_objc_release@GOTPCREL(%rip)
+LBB29_9:
+	movq	%rbx, %rdi
+	callq	*_objc_release@GOTPCREL(%rip)
+LBB29_10:
 	movzbl	%bpl, %eax
 	popq	%rbx
 	popq	%r12
@@ -678,7 +737,7 @@ LBB29_4:
 	retq
 LBB29_1:
 	xorl	%ebp, %ebp
-	jmp	LBB29_4
+	jmp	LBB29_10
 	.cfi_endproc
 
 	.private_extern	"-[MACHView stopDisplayLink]"
@@ -693,7 +752,7 @@ LBB29_1:
 	movq	%rdi, %rbx
 	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rax
 	movq	(%rdi,%rax), %rdi
-	movq	_OBJC_SELECTOR_REFERENCES_.26(%rip), %rsi
+	movq	_OBJC_SELECTOR_REFERENCES_.32(%rip), %rsi
 	callq	*_objc_msgSend@GOTPCREL(%rip)
 	movq	_OBJC_IVAR_$_MACHView._displayLink(%rip), %rax
 	movq	(%rbx,%rax), %rdi
@@ -729,7 +788,7 @@ LBB30_1:
 	movq	%rdi, (%rax)
 	movq	l_OBJC_CLASSLIST_SUP_REFS_$_(%rip), %rcx
 	movq	%rcx, 8(%rax)
-	movq	_OBJC_SELECTOR_REFERENCES_.28(%rip), %rsi
+	movq	_OBJC_SELECTOR_REFERENCES_.34(%rip), %rsi
 	movq	136(%rsp), %rcx
 	movq	%rcx, 24(%rsp)
 	movq	128(%rsp), %rcx
@@ -743,14 +802,14 @@ LBB30_1:
 	movq	%rax, %rbx
 	testq	%rax, %rax
 	je	LBB32_2
-	movq	_OBJC_SELECTOR_REFERENCES_.30(%rip), %rdx
+	movq	_OBJC_SELECTOR_REFERENCES_.36(%rip), %rdx
 	leaq	48(%rsp), %r14
 	movq	%r14, %rdi
 	movq	%rbx, %rsi
 	callq	_objc_msgSend_stret
-	movq	_OBJC_CLASSLIST_REFERENCES_$_.31(%rip), %rdi
+	movq	_OBJC_CLASSLIST_REFERENCES_$_.37(%rip), %rdi
 	callq	_objc_alloc
-	movq	_OBJC_SELECTOR_REFERENCES_.33(%rip), %rsi
+	movq	_OBJC_SELECTOR_REFERENCES_.39(%rip), %rsi
 	movq	24(%r14), %rcx
 	movq	%rcx, 24(%rsp)
 	movq	16(%r14), %rcx
@@ -770,7 +829,7 @@ LBB30_1:
 	movq	%rax, (%rbx,%r15)
 	callq	*_objc_release@GOTPCREL(%rip)
 	movq	(%rbx,%r15), %rdx
-	movq	_OBJC_SELECTOR_REFERENCES_.35(%rip), %rsi
+	movq	_OBJC_SELECTOR_REFERENCES_.41(%rip), %rsi
 	movq	%rbx, %rdi
 	callq	*%r14
 LBB32_2:
@@ -983,6 +1042,15 @@ L_OBJC_METH_VAR_NAME_.14:
 _OBJC_SELECTOR_REFERENCES_.15:
 	.quad	L_OBJC_METH_VAR_NAME_.14
 
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.16:
+	.asciz	"drawable"
+
+	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
+	.p2align	3, 0x0
+_OBJC_SELECTOR_REFERENCES_.17:
+	.quad	L_OBJC_METH_VAR_NAME_.16
+
 	.private_extern	_OBJC_IVAR_$_MACHView._displayLink
 	.section	__DATA,__objc_ivar
 	.globl	_OBJC_IVAR_$_MACHView._displayLink
@@ -991,17 +1059,8 @@ _OBJC_IVAR_$_MACHView._displayLink:
 	.quad	96
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.16:
-	.asciz	"displayLinkFired:"
-
-	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
-	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.17:
-	.quad	L_OBJC_METH_VAR_NAME_.16
-
-	.section	__TEXT,__objc_methname,cstring_literals
 L_OBJC_METH_VAR_NAME_.18:
-	.asciz	"displayLinkWithTarget:selector:"
+	.asciz	"layer"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
@@ -1011,34 +1070,61 @@ _OBJC_SELECTOR_REFERENCES_.19:
 	.section	__DATA,__objc_classrefs,regular,no_dead_strip
 	.p2align	3, 0x0
 _OBJC_CLASSLIST_REFERENCES_$_.20:
+	.quad	_OBJC_CLASS_$_CAMetalLayer
+
+	.p2align	3, 0x0
+_OBJC_CLASSLIST_REFERENCES_$_.21:
+	.quad	_OBJC_CLASS_$_CAMetalDisplayLink
+
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.22:
+	.asciz	"initWithMetalLayer:"
+
+	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
+	.p2align	3, 0x0
+_OBJC_SELECTOR_REFERENCES_.23:
+	.quad	L_OBJC_METH_VAR_NAME_.22
+
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.24:
+	.asciz	"setDelegate:"
+
+	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
+	.p2align	3, 0x0
+_OBJC_SELECTOR_REFERENCES_.25:
+	.quad	L_OBJC_METH_VAR_NAME_.24
+
+	.section	__DATA,__objc_classrefs,regular,no_dead_strip
+	.p2align	3, 0x0
+_OBJC_CLASSLIST_REFERENCES_$_.26:
 	.quad	_OBJC_CLASS_$_NSRunLoop
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.21:
+L_OBJC_METH_VAR_NAME_.27:
 	.asciz	"mainRunLoop"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.22:
-	.quad	L_OBJC_METH_VAR_NAME_.21
+_OBJC_SELECTOR_REFERENCES_.28:
+	.quad	L_OBJC_METH_VAR_NAME_.27
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.23:
+L_OBJC_METH_VAR_NAME_.29:
 	.asciz	"addToRunLoop:forMode:"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.24:
-	.quad	L_OBJC_METH_VAR_NAME_.23
+_OBJC_SELECTOR_REFERENCES_.30:
+	.quad	L_OBJC_METH_VAR_NAME_.29
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.25:
+L_OBJC_METH_VAR_NAME_.31:
 	.asciz	"invalidate"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.26:
-	.quad	L_OBJC_METH_VAR_NAME_.25
+_OBJC_SELECTOR_REFERENCES_.32:
+	.quad	L_OBJC_METH_VAR_NAME_.31
 
 	.section	__DATA,__objc_data
 	.globl	_OBJC_CLASS_$_MACHView
@@ -1056,36 +1142,36 @@ l_OBJC_CLASSLIST_SUP_REFS_$_:
 	.quad	_OBJC_CLASS_$_MACHView
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.27:
+L_OBJC_METH_VAR_NAME_.33:
 	.asciz	"initWithFrame:"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.28:
-	.quad	L_OBJC_METH_VAR_NAME_.27
+_OBJC_SELECTOR_REFERENCES_.34:
+	.quad	L_OBJC_METH_VAR_NAME_.33
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.29:
+L_OBJC_METH_VAR_NAME_.35:
 	.asciz	"visibleRect"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.30:
-	.quad	L_OBJC_METH_VAR_NAME_.29
+_OBJC_SELECTOR_REFERENCES_.36:
+	.quad	L_OBJC_METH_VAR_NAME_.35
 
 	.section	__DATA,__objc_classrefs,regular,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_CLASSLIST_REFERENCES_$_.31:
+_OBJC_CLASSLIST_REFERENCES_$_.37:
 	.quad	_OBJC_CLASS_$_NSTrackingArea
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.32:
+L_OBJC_METH_VAR_NAME_.38:
 	.asciz	"initWithRect:options:owner:userInfo:"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.33:
-	.quad	L_OBJC_METH_VAR_NAME_.32
+_OBJC_SELECTOR_REFERENCES_.39:
+	.quad	L_OBJC_METH_VAR_NAME_.38
 
 	.private_extern	_OBJC_IVAR_$_MACHView.trackingArea
 	.section	__DATA,__objc_ivar
@@ -1095,19 +1181,82 @@ _OBJC_IVAR_$_MACHView.trackingArea:
 	.quad	88
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.34:
+L_OBJC_METH_VAR_NAME_.40:
 	.asciz	"addTrackingArea:"
 
 	.section	__DATA,__objc_selrefs,literal_pointers,no_dead_strip
 	.p2align	3, 0x0
-_OBJC_SELECTOR_REFERENCES_.35:
-	.quad	L_OBJC_METH_VAR_NAME_.34
+_OBJC_SELECTOR_REFERENCES_.41:
+	.quad	L_OBJC_METH_VAR_NAME_.40
 
 	.section	__TEXT,__objc_classname,cstring_literals
 L_OBJC_CLASS_NAME_:
 	.asciz	"MACHView"
 
+L_OBJC_CLASS_NAME_.42:
+	.asciz	"CAMetalDisplayLinkDelegate"
+
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.43:
+	.asciz	"metalDisplayLink:needsUpdate:"
+
+	.section	__TEXT,__objc_methtype,cstring_literals
+L_OBJC_METH_VAR_TYPE_:
+	.asciz	"v32@0:8@16@24"
+
 	.section	__DATA,__objc_const
+	.p2align	3, 0x0
+__OBJC_$_PROTOCOL_INSTANCE_METHODS_CAMetalDisplayLinkDelegate:
+	.long	24
+	.long	1
+	.quad	L_OBJC_METH_VAR_NAME_.43
+	.quad	L_OBJC_METH_VAR_TYPE_
+	.quad	0
+
+	.section	__TEXT,__objc_methtype,cstring_literals
+L_OBJC_METH_VAR_TYPE_.44:
+	.asciz	"v32@0:8@\"CAMetalDisplayLink\"16@\"CAMetalDisplayLinkUpdate\"24"
+
+	.section	__DATA,__objc_const
+	.p2align	3, 0x0
+__OBJC_$_PROTOCOL_METHOD_TYPES_CAMetalDisplayLinkDelegate:
+	.quad	L_OBJC_METH_VAR_TYPE_.44
+
+	.private_extern	__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.section	__DATA,__data
+	.globl	__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.weak_definition	__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.p2align	3, 0x0
+__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate:
+	.quad	0
+	.quad	L_OBJC_CLASS_NAME_.42
+	.quad	0
+	.quad	__OBJC_$_PROTOCOL_INSTANCE_METHODS_CAMetalDisplayLinkDelegate
+	.quad	0
+	.quad	0
+	.quad	0
+	.quad	0
+	.long	96
+	.long	0
+	.quad	__OBJC_$_PROTOCOL_METHOD_TYPES_CAMetalDisplayLinkDelegate
+	.quad	0
+	.quad	0
+
+	.private_extern	__OBJC_LABEL_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.section	__DATA,__objc_protolist,coalesced,no_dead_strip
+	.globl	__OBJC_LABEL_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.weak_definition	__OBJC_LABEL_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.p2align	3, 0x0
+__OBJC_LABEL_PROTOCOL_$_CAMetalDisplayLinkDelegate:
+	.quad	__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate
+
+	.section	__DATA,__objc_const
+	.p2align	3, 0x0
+__OBJC_CLASS_PROTOCOLS_$_MACHView:
+	.quad	1
+	.quad	__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.quad	0
+
 	.p2align	3, 0x0
 __OBJC_METACLASS_RO_$_MACHView:
 	.long	389
@@ -1117,7 +1266,7 @@ __OBJC_METACLASS_RO_$_MACHView:
 	.quad	0
 	.quad	L_OBJC_CLASS_NAME_
 	.quad	0
-	.quad	0
+	.quad	__OBJC_CLASS_PROTOCOLS_$_MACHView
 	.quad	0
 	.quad	0
 	.quad	0
@@ -1133,90 +1282,90 @@ _OBJC_METACLASS_$_MACHView:
 	.quad	__OBJC_METACLASS_RO_$_MACHView
 
 	.section	__TEXT,__objc_classname,cstring_literals
-L_OBJC_CLASS_NAME_.36:
+L_OBJC_CLASS_NAME_.45:
 	.asciz	"\f"
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.37:
+L_OBJC_METH_VAR_NAME_.46:
 	.asciz	"canBecomeKeyView"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_:
+L_OBJC_METH_VAR_TYPE_.47:
 	.asciz	"c16@0:8"
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.38:
+L_OBJC_METH_VAR_NAME_.48:
 	.asciz	"acceptsFirstResponder"
 
-L_OBJC_METH_VAR_NAME_.39:
+L_OBJC_METH_VAR_NAME_.49:
 	.asciz	"keyDown:"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.40:
+L_OBJC_METH_VAR_TYPE_.50:
 	.asciz	"v24@0:8@16"
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.41:
+L_OBJC_METH_VAR_NAME_.51:
 	.asciz	"insertText:"
 
-L_OBJC_METH_VAR_NAME_.42:
+L_OBJC_METH_VAR_NAME_.52:
 	.asciz	"keyUp:"
 
-L_OBJC_METH_VAR_NAME_.43:
+L_OBJC_METH_VAR_NAME_.53:
 	.asciz	"flagsChanged:"
 
-L_OBJC_METH_VAR_NAME_.44:
+L_OBJC_METH_VAR_NAME_.54:
 	.asciz	"mouseMoved:"
 
-L_OBJC_METH_VAR_NAME_.45:
+L_OBJC_METH_VAR_NAME_.55:
 	.asciz	"mouseDragged:"
 
-L_OBJC_METH_VAR_NAME_.46:
+L_OBJC_METH_VAR_NAME_.56:
 	.asciz	"rightMouseDragged:"
 
-L_OBJC_METH_VAR_NAME_.47:
+L_OBJC_METH_VAR_NAME_.57:
 	.asciz	"otherMouseDragged:"
 
-L_OBJC_METH_VAR_NAME_.48:
+L_OBJC_METH_VAR_NAME_.58:
 	.asciz	"mouseDown:"
 
-L_OBJC_METH_VAR_NAME_.49:
+L_OBJC_METH_VAR_NAME_.59:
 	.asciz	"rightMouseDown:"
 
-L_OBJC_METH_VAR_NAME_.50:
+L_OBJC_METH_VAR_NAME_.60:
 	.asciz	"otherMouseDown:"
 
-L_OBJC_METH_VAR_NAME_.51:
+L_OBJC_METH_VAR_NAME_.61:
 	.asciz	"mouseUp:"
 
-L_OBJC_METH_VAR_NAME_.52:
+L_OBJC_METH_VAR_NAME_.62:
 	.asciz	"rightMouseUp:"
 
-L_OBJC_METH_VAR_NAME_.53:
+L_OBJC_METH_VAR_NAME_.63:
 	.asciz	"otherMouseUp:"
 
-L_OBJC_METH_VAR_NAME_.54:
+L_OBJC_METH_VAR_NAME_.64:
 	.asciz	"scrollWheel:"
 
-L_OBJC_METH_VAR_NAME_.55:
+L_OBJC_METH_VAR_NAME_.65:
 	.asciz	"magnifyWithEvent:"
 
-L_OBJC_METH_VAR_NAME_.56:
+L_OBJC_METH_VAR_NAME_.66:
 	.asciz	"doCommandBySelector:"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.57:
+L_OBJC_METH_VAR_TYPE_.67:
 	.asciz	"v24@0:8:16"
 
-L_OBJC_METH_VAR_TYPE_.58:
+L_OBJC_METH_VAR_TYPE_.68:
 	.asciz	"@48@0:8{CGRect={CGPoint=dd}{CGSize=dd}}16"
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.59:
+L_OBJC_METH_VAR_NAME_.69:
 	.asciz	".cxx_destruct"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.60:
+L_OBJC_METH_VAR_TYPE_.70:
 	.asciz	"v16@0:8"
 
 	.section	__DATA,__objc_const
@@ -1224,123 +1373,123 @@ L_OBJC_METH_VAR_TYPE_.60:
 __OBJC_$_INSTANCE_METHODS_MACHView:
 	.long	24
 	.long	22
-	.quad	L_OBJC_METH_VAR_NAME_.37
-	.quad	L_OBJC_METH_VAR_TYPE_
-	.quad	"-[MACHView canBecomeKeyView]"
-	.quad	L_OBJC_METH_VAR_NAME_.38
-	.quad	L_OBJC_METH_VAR_TYPE_
-	.quad	"-[MACHView acceptsFirstResponder]"
-	.quad	L_OBJC_METH_VAR_NAME_.39
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView keyDown:]"
-	.quad	L_OBJC_METH_VAR_NAME_.41
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView insertText:]"
-	.quad	L_OBJC_METH_VAR_NAME_.42
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView keyUp:]"
-	.quad	L_OBJC_METH_VAR_NAME_.43
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView flagsChanged:]"
-	.quad	L_OBJC_METH_VAR_NAME_.44
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView mouseMoved:]"
-	.quad	L_OBJC_METH_VAR_NAME_.45
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView mouseDragged:]"
 	.quad	L_OBJC_METH_VAR_NAME_.46
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView rightMouseDragged:]"
-	.quad	L_OBJC_METH_VAR_NAME_.47
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView otherMouseDragged:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.47
+	.quad	"-[MACHView canBecomeKeyView]"
 	.quad	L_OBJC_METH_VAR_NAME_.48
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView mouseDown:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.47
+	.quad	"-[MACHView acceptsFirstResponder]"
 	.quad	L_OBJC_METH_VAR_NAME_.49
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView rightMouseDown:]"
-	.quad	L_OBJC_METH_VAR_NAME_.50
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView otherMouseDown:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView keyDown:]"
 	.quad	L_OBJC_METH_VAR_NAME_.51
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView mouseUp:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView insertText:]"
 	.quad	L_OBJC_METH_VAR_NAME_.52
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView rightMouseUp:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView keyUp:]"
 	.quad	L_OBJC_METH_VAR_NAME_.53
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView otherMouseUp:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView flagsChanged:]"
 	.quad	L_OBJC_METH_VAR_NAME_.54
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView scrollWheel:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView mouseMoved:]"
 	.quad	L_OBJC_METH_VAR_NAME_.55
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView magnifyWithEvent:]"
-	.quad	L_OBJC_METH_VAR_NAME_.16
-	.quad	L_OBJC_METH_VAR_TYPE_.40
-	.quad	"-[MACHView displayLinkFired:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView mouseDragged:]"
 	.quad	L_OBJC_METH_VAR_NAME_.56
-	.quad	L_OBJC_METH_VAR_TYPE_.57
-	.quad	"-[MACHView doCommandBySelector:]"
-	.quad	L_OBJC_METH_VAR_NAME_.27
-	.quad	L_OBJC_METH_VAR_TYPE_.58
-	.quad	"-[MACHView initWithFrame:]"
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView rightMouseDragged:]"
+	.quad	L_OBJC_METH_VAR_NAME_.57
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView otherMouseDragged:]"
+	.quad	L_OBJC_METH_VAR_NAME_.58
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView mouseDown:]"
 	.quad	L_OBJC_METH_VAR_NAME_.59
-	.quad	L_OBJC_METH_VAR_TYPE_.60
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView rightMouseDown:]"
+	.quad	L_OBJC_METH_VAR_NAME_.60
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView otherMouseDown:]"
+	.quad	L_OBJC_METH_VAR_NAME_.61
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView mouseUp:]"
+	.quad	L_OBJC_METH_VAR_NAME_.62
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView rightMouseUp:]"
+	.quad	L_OBJC_METH_VAR_NAME_.63
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView otherMouseUp:]"
+	.quad	L_OBJC_METH_VAR_NAME_.64
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView scrollWheel:]"
+	.quad	L_OBJC_METH_VAR_NAME_.65
+	.quad	L_OBJC_METH_VAR_TYPE_.50
+	.quad	"-[MACHView magnifyWithEvent:]"
+	.quad	L_OBJC_METH_VAR_NAME_.43
+	.quad	L_OBJC_METH_VAR_TYPE_
+	.quad	"-[MACHView metalDisplayLink:needsUpdate:]"
+	.quad	L_OBJC_METH_VAR_NAME_.66
+	.quad	L_OBJC_METH_VAR_TYPE_.67
+	.quad	"-[MACHView doCommandBySelector:]"
+	.quad	L_OBJC_METH_VAR_NAME_.33
+	.quad	L_OBJC_METH_VAR_TYPE_.68
+	.quad	"-[MACHView initWithFrame:]"
+	.quad	L_OBJC_METH_VAR_NAME_.69
+	.quad	L_OBJC_METH_VAR_TYPE_.70
 	.quad	"-[MACHView .cxx_destruct]"
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.61:
+L_OBJC_METH_VAR_NAME_.71:
 	.asciz	"_keyDown_block"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.62:
+L_OBJC_METH_VAR_TYPE_.72:
 	.asciz	"@?"
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.63:
+L_OBJC_METH_VAR_NAME_.73:
 	.asciz	"_keyUp_block"
 
-L_OBJC_METH_VAR_NAME_.64:
+L_OBJC_METH_VAR_NAME_.74:
 	.asciz	"_flagsChanged_block"
 
-L_OBJC_METH_VAR_NAME_.65:
+L_OBJC_METH_VAR_NAME_.75:
 	.asciz	"_mouseMoved_block"
 
-L_OBJC_METH_VAR_NAME_.66:
+L_OBJC_METH_VAR_NAME_.76:
 	.asciz	"_mouseDown_block"
 
-L_OBJC_METH_VAR_NAME_.67:
+L_OBJC_METH_VAR_NAME_.77:
 	.asciz	"_mouseUp_block"
 
-L_OBJC_METH_VAR_NAME_.68:
+L_OBJC_METH_VAR_NAME_.78:
 	.asciz	"_scrollWheel_block"
 
-L_OBJC_METH_VAR_NAME_.69:
+L_OBJC_METH_VAR_NAME_.79:
 	.asciz	"_magnify_block"
 
-L_OBJC_METH_VAR_NAME_.70:
+L_OBJC_METH_VAR_NAME_.80:
 	.asciz	"_insertText_block"
 
-L_OBJC_METH_VAR_NAME_.71:
+L_OBJC_METH_VAR_NAME_.81:
 	.asciz	"_render_block"
 
-L_OBJC_METH_VAR_NAME_.72:
+L_OBJC_METH_VAR_NAME_.82:
 	.asciz	"trackingArea"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.73:
+L_OBJC_METH_VAR_TYPE_.83:
 	.asciz	"@\"NSTrackingArea\""
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.74:
+L_OBJC_METH_VAR_NAME_.84:
 	.asciz	"_displayLink"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.75:
-	.asciz	"@\"CADisplayLink\""
+L_OBJC_METH_VAR_TYPE_.85:
+	.asciz	"@\"CAMetalDisplayLink\""
 
 	.section	__DATA,__objc_const
 	.p2align	3, 0x0
@@ -1348,63 +1497,63 @@ __OBJC_$_INSTANCE_VARIABLES_MACHView:
 	.long	32
 	.long	12
 	.quad	_OBJC_IVAR_$_MACHView._keyDown_block
-	.quad	L_OBJC_METH_VAR_NAME_.61
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.71
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._keyUp_block
-	.quad	L_OBJC_METH_VAR_NAME_.63
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.73
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._flagsChanged_block
-	.quad	L_OBJC_METH_VAR_NAME_.64
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.74
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._mouseMoved_block
-	.quad	L_OBJC_METH_VAR_NAME_.65
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.75
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._mouseDown_block
-	.quad	L_OBJC_METH_VAR_NAME_.66
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.76
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._mouseUp_block
-	.quad	L_OBJC_METH_VAR_NAME_.67
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.77
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._scrollWheel_block
-	.quad	L_OBJC_METH_VAR_NAME_.68
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.78
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._magnify_block
-	.quad	L_OBJC_METH_VAR_NAME_.69
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.79
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._insertText_block
-	.quad	L_OBJC_METH_VAR_NAME_.70
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.80
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._render_block
-	.quad	L_OBJC_METH_VAR_NAME_.71
-	.quad	L_OBJC_METH_VAR_TYPE_.62
+	.quad	L_OBJC_METH_VAR_NAME_.81
+	.quad	L_OBJC_METH_VAR_TYPE_.72
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView.trackingArea
-	.quad	L_OBJC_METH_VAR_NAME_.72
-	.quad	L_OBJC_METH_VAR_TYPE_.73
+	.quad	L_OBJC_METH_VAR_NAME_.82
+	.quad	L_OBJC_METH_VAR_TYPE_.83
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHView._displayLink
-	.quad	L_OBJC_METH_VAR_NAME_.74
-	.quad	L_OBJC_METH_VAR_TYPE_.75
+	.quad	L_OBJC_METH_VAR_NAME_.84
+	.quad	L_OBJC_METH_VAR_TYPE_.85
 	.long	3
 	.long	8
 
@@ -1414,10 +1563,10 @@ __OBJC_CLASS_RO_$_MACHView:
 	.long	8
 	.long	104
 	.space	4
-	.quad	L_OBJC_CLASS_NAME_.36
+	.quad	L_OBJC_CLASS_NAME_.45
 	.quad	L_OBJC_CLASS_NAME_
 	.quad	__OBJC_$_INSTANCE_METHODS_MACHView
-	.quad	0
+	.quad	__OBJC_CLASS_PROTOCOLS_$_MACHView
 	.quad	__OBJC_$_INSTANCE_VARIABLES_MACHView
 	.quad	0
 	.quad	0
@@ -1427,9 +1576,12 @@ __OBJC_CLASS_RO_$_MACHView:
 l_OBJC_LABEL_CLASS_$:
 	.quad	_OBJC_CLASS_$_MACHView
 
+	.no_dead_strip	__OBJC_LABEL_PROTOCOL_$_CAMetalDisplayLinkDelegate
+	.no_dead_strip	__OBJC_PROTOCOL_$_CAMetalDisplayLinkDelegate
 	.section	__DATA,__objc_imageinfo,regular,no_dead_strip
 L_OBJC_IMAGE_INFO:
 	.long	0
 	.long	64
 
+	.weak_reference _OBJC_CLASS_$_CAMetalDisplayLink
 .subsections_via_symbols
