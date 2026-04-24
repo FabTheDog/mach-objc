@@ -390,6 +390,9 @@ pub const Event = opaque {
     pub fn addLocalMonitorForEventsMatchingMask_handler(mask_: EventMask, block_: *ns.Block(fn (*Event) ?*Event)) ?*objc.Id {
         return objc.msgSend(@This().InternalInfo.class(), "addLocalMonitorForEventsMatchingMask:handler:", ?*objc.Id, .{ mask_, block_ });
     }
+    pub fn removeMonitor(eventMonitor_: *objc.Id) void {
+        return objc.msgSend(@This().InternalInfo.class(), "removeMonitor:", void, .{eventMonitor_});
+    }
     pub fn @"type"(self_: *@This()) EventType {
         return objc.msgSend(self_, "type", EventType, .{});
     }

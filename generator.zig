@@ -2115,6 +2115,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSEvent", "phase" },
         [2][]const u8{ "NSEvent", "type" },
         [2][]const u8{ "NSEvent", "addLocalMonitorForEventsMatchingMask:handler" },
+        [2][]const u8{ "NSEvent", "removeMonitor" },
 
         [2][]const u8{ "NSDate", "dateWithTimeIntervalSinceNow" },
 
