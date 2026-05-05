@@ -56,6 +56,30 @@ pub const mach = struct {
             *const fn (*WindowDelegate, *foundation.Block(fn () bool)) callconv(.c) void,
             .{ .name = "\x01-[MACHWindowDelegate setBlock_windowShouldClose:]" },
         );
+
+        pub fn setBlock_windowDidChangeBackingProperties(self: *WindowDelegate, block: *foundation.Block(fn () void)) void {
+            method_windowDidChangeBackingProperties(self, block);
+        }
+        const method_windowDidChangeBackingProperties = @extern(
+            *const fn (*WindowDelegate, *foundation.Block(fn () void)) callconv(.c) void,
+            .{ .name = "\x01-[MACHWindowDelegate setBlock_windowDidChangeBackingProperties:]" },
+        );
+
+        pub fn setBlock_windowDidBecomeKey(self: *WindowDelegate, block: *foundation.Block(fn () void)) void {
+            method_windowDidBecomeKey(self, block);
+        }
+        const method_windowDidBecomeKey = @extern(
+            *const fn (*WindowDelegate, *foundation.Block(fn () void)) callconv(.c) void,
+            .{ .name = "\x01-[MACHWindowDelegate setBlock_windowDidBecomeKey:]" },
+        );
+
+        pub fn setBlock_windowDidResignKey(self: *WindowDelegate, block: *foundation.Block(fn () void)) void {
+            method_windowDidResignKey(self, block);
+        }
+        const method_windowDidResignKey = @extern(
+            *const fn (*WindowDelegate, *foundation.Block(fn () void)) callconv(.c) void,
+            .{ .name = "\x01-[MACHWindowDelegate setBlock_windowDidResignKey:]" },
+        );
     };
 
     pub const View = opaque {
