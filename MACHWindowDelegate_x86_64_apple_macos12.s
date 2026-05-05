@@ -42,14 +42,77 @@ LBB1_1:
 	retq
 	.cfi_endproc
 
+	.private_extern	"-[MACHWindowDelegate setBlock_windowDidChangeBackingProperties:]"
+	.globl	"-[MACHWindowDelegate setBlock_windowDidChangeBackingProperties:]"
+"-[MACHWindowDelegate setBlock_windowDidChangeBackingProperties:]":
+	.cfi_startproc
+	pushq	%rbx
+	.cfi_def_cfa_offset 16
+	.cfi_offset %rbx, -16
+	testq	%rdi, %rdi
+	je	LBB2_1
+	movq	%rdi, %rbx
+	movq	%rsi, %rdi
+	callq	_objc_retainBlock
+	movq	24(%rbx), %rdi
+	movq	%rax, 24(%rbx)
+	popq	%rbx
+	jmpq	*_objc_release@GOTPCREL(%rip)
+LBB2_1:
+	popq	%rbx
+	retq
+	.cfi_endproc
+
+	.private_extern	"-[MACHWindowDelegate setBlock_windowDidBecomeKey:]"
+	.globl	"-[MACHWindowDelegate setBlock_windowDidBecomeKey:]"
+"-[MACHWindowDelegate setBlock_windowDidBecomeKey:]":
+	.cfi_startproc
+	pushq	%rbx
+	.cfi_def_cfa_offset 16
+	.cfi_offset %rbx, -16
+	testq	%rdi, %rdi
+	je	LBB3_1
+	movq	%rdi, %rbx
+	movq	%rsi, %rdi
+	callq	_objc_retainBlock
+	movq	32(%rbx), %rdi
+	movq	%rax, 32(%rbx)
+	popq	%rbx
+	jmpq	*_objc_release@GOTPCREL(%rip)
+LBB3_1:
+	popq	%rbx
+	retq
+	.cfi_endproc
+
+	.private_extern	"-[MACHWindowDelegate setBlock_windowDidResignKey:]"
+	.globl	"-[MACHWindowDelegate setBlock_windowDidResignKey:]"
+"-[MACHWindowDelegate setBlock_windowDidResignKey:]":
+	.cfi_startproc
+	pushq	%rbx
+	.cfi_def_cfa_offset 16
+	.cfi_offset %rbx, -16
+	testq	%rdi, %rdi
+	je	LBB4_1
+	movq	%rdi, %rbx
+	movq	%rsi, %rdi
+	callq	_objc_retainBlock
+	movq	40(%rbx), %rdi
+	movq	%rax, 40(%rbx)
+	popq	%rbx
+	jmpq	*_objc_release@GOTPCREL(%rip)
+LBB4_1:
+	popq	%rbx
+	retq
+	.cfi_endproc
+
 "-[MACHWindowDelegate windowDidResize:]":
 
 	.cfi_startproc
 	movq	8(%rdi), %rdi
 	testq	%rdi, %rdi
-	je	LBB2_1
+	je	LBB5_1
 	jmpq	*16(%rdi)
-LBB2_1:
+LBB5_1:
 	retq
 	.cfi_endproc
 
@@ -58,13 +121,46 @@ LBB2_1:
 	.cfi_startproc
 	movq	16(%rdi), %rdi
 	testq	%rdi, %rdi
-	je	LBB3_2
+	je	LBB6_2
 	pushq	%rax
 	.cfi_def_cfa_offset 16
 	callq	*16(%rdi)
 	addq	$8, %rsp
-LBB3_2:
+LBB6_2:
 	xorl	%eax, %eax
+	retq
+	.cfi_endproc
+
+"-[MACHWindowDelegate windowDidChangeBackingProperties:]":
+
+	.cfi_startproc
+	movq	24(%rdi), %rdi
+	testq	%rdi, %rdi
+	je	LBB7_1
+	jmpq	*16(%rdi)
+LBB7_1:
+	retq
+	.cfi_endproc
+
+"-[MACHWindowDelegate windowDidBecomeKey:]":
+
+	.cfi_startproc
+	movq	32(%rdi), %rdi
+	testq	%rdi, %rdi
+	je	LBB8_1
+	jmpq	*16(%rdi)
+LBB8_1:
+	retq
+	.cfi_endproc
+
+"-[MACHWindowDelegate windowDidResignKey:]":
+
+	.cfi_startproc
+	movq	40(%rdi), %rdi
+	testq	%rdi, %rdi
+	je	LBB9_1
+	jmpq	*16(%rdi)
+LBB9_1:
 	retq
 	.cfi_endproc
 
@@ -81,7 +177,16 @@ LBB3_2:
 	.cfi_def_cfa_offset 16
 	.cfi_offset %rbx, -16
 	movq	%rdi, %rbx
-	addq	$16, %rdi
+	addq	$40, %rdi
+	xorl	%esi, %esi
+	callq	_objc_storeStrong
+	leaq	32(%rbx), %rdi
+	xorl	%esi, %esi
+	callq	_objc_storeStrong
+	leaq	24(%rbx), %rdi
+	xorl	%esi, %esi
+	callq	_objc_storeStrong
+	leaq	16(%rbx), %rdi
 	xorl	%esi, %esi
 	callq	_objc_storeStrong
 	addq	$8, %rbx
@@ -122,7 +227,7 @@ _OBJC_METACLASS_$_MACHWindowDelegate:
 
 	.section	__TEXT,__objc_classname,cstring_literals
 L_OBJC_CLASS_NAME_.1:
-	.asciz	"\002"
+	.asciz	"\005"
 
 	.section	__TEXT,__objc_methname,cstring_literals
 L_OBJC_METH_VAR_NAME_:
@@ -142,20 +247,29 @@ L_OBJC_METH_VAR_TYPE_.3:
 
 	.section	__TEXT,__objc_methname,cstring_literals
 L_OBJC_METH_VAR_NAME_.4:
-	.asciz	"windowWillClose:"
+	.asciz	"windowDidChangeBackingProperties:"
 
 L_OBJC_METH_VAR_NAME_.5:
+	.asciz	"windowDidBecomeKey:"
+
+L_OBJC_METH_VAR_NAME_.6:
+	.asciz	"windowDidResignKey:"
+
+L_OBJC_METH_VAR_NAME_.7:
+	.asciz	"windowWillClose:"
+
+L_OBJC_METH_VAR_NAME_.8:
 	.asciz	".cxx_destruct"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.6:
+L_OBJC_METH_VAR_TYPE_.9:
 	.asciz	"v16@0:8"
 
 	.section	__DATA,__objc_const
 	.p2align	3, 0x0
 __OBJC_$_INSTANCE_METHODS_MACHWindowDelegate:
 	.long	24
-	.long	4
+	.long	7
 	.quad	L_OBJC_METH_VAR_NAME_
 	.quad	L_OBJC_METH_VAR_TYPE_
 	.quad	"-[MACHWindowDelegate windowDidResize:]"
@@ -164,9 +278,18 @@ __OBJC_$_INSTANCE_METHODS_MACHWindowDelegate:
 	.quad	"-[MACHWindowDelegate windowShouldClose:]"
 	.quad	L_OBJC_METH_VAR_NAME_.4
 	.quad	L_OBJC_METH_VAR_TYPE_
-	.quad	"-[MACHWindowDelegate windowWillClose:]"
+	.quad	"-[MACHWindowDelegate windowDidChangeBackingProperties:]"
 	.quad	L_OBJC_METH_VAR_NAME_.5
-	.quad	L_OBJC_METH_VAR_TYPE_.6
+	.quad	L_OBJC_METH_VAR_TYPE_
+	.quad	"-[MACHWindowDelegate windowDidBecomeKey:]"
+	.quad	L_OBJC_METH_VAR_NAME_.6
+	.quad	L_OBJC_METH_VAR_TYPE_
+	.quad	"-[MACHWindowDelegate windowDidResignKey:]"
+	.quad	L_OBJC_METH_VAR_NAME_.7
+	.quad	L_OBJC_METH_VAR_TYPE_
+	.quad	"-[MACHWindowDelegate windowWillClose:]"
+	.quad	L_OBJC_METH_VAR_NAME_.8
+	.quad	L_OBJC_METH_VAR_TYPE_.9
 	.quad	"-[MACHWindowDelegate .cxx_destruct]"
 
 	.private_extern	_OBJC_IVAR_$_MACHWindowDelegate._windowDidResize_block
@@ -177,11 +300,11 @@ _OBJC_IVAR_$_MACHWindowDelegate._windowDidResize_block:
 	.quad	8
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.7:
+L_OBJC_METH_VAR_NAME_.10:
 	.asciz	"_windowDidResize_block"
 
 	.section	__TEXT,__objc_methtype,cstring_literals
-L_OBJC_METH_VAR_TYPE_.8:
+L_OBJC_METH_VAR_TYPE_.11:
 	.asciz	"@?"
 
 	.private_extern	_OBJC_IVAR_$_MACHWindowDelegate._windowShouldClose_block
@@ -192,22 +315,70 @@ _OBJC_IVAR_$_MACHWindowDelegate._windowShouldClose_block:
 	.quad	16
 
 	.section	__TEXT,__objc_methname,cstring_literals
-L_OBJC_METH_VAR_NAME_.9:
+L_OBJC_METH_VAR_NAME_.12:
 	.asciz	"_windowShouldClose_block"
+
+	.private_extern	_OBJC_IVAR_$_MACHWindowDelegate._windowDidChangeBackingProperties_block
+	.section	__DATA,__objc_ivar
+	.globl	_OBJC_IVAR_$_MACHWindowDelegate._windowDidChangeBackingProperties_block
+	.p2align	3, 0x0
+_OBJC_IVAR_$_MACHWindowDelegate._windowDidChangeBackingProperties_block:
+	.quad	24
+
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.13:
+	.asciz	"_windowDidChangeBackingProperties_block"
+
+	.private_extern	_OBJC_IVAR_$_MACHWindowDelegate._windowDidBecomeKey_block
+	.section	__DATA,__objc_ivar
+	.globl	_OBJC_IVAR_$_MACHWindowDelegate._windowDidBecomeKey_block
+	.p2align	3, 0x0
+_OBJC_IVAR_$_MACHWindowDelegate._windowDidBecomeKey_block:
+	.quad	32
+
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.14:
+	.asciz	"_windowDidBecomeKey_block"
+
+	.private_extern	_OBJC_IVAR_$_MACHWindowDelegate._windowDidResignKey_block
+	.section	__DATA,__objc_ivar
+	.globl	_OBJC_IVAR_$_MACHWindowDelegate._windowDidResignKey_block
+	.p2align	3, 0x0
+_OBJC_IVAR_$_MACHWindowDelegate._windowDidResignKey_block:
+	.quad	40
+
+	.section	__TEXT,__objc_methname,cstring_literals
+L_OBJC_METH_VAR_NAME_.15:
+	.asciz	"_windowDidResignKey_block"
 
 	.section	__DATA,__objc_const
 	.p2align	3, 0x0
 __OBJC_$_INSTANCE_VARIABLES_MACHWindowDelegate:
 	.long	32
-	.long	2
+	.long	5
 	.quad	_OBJC_IVAR_$_MACHWindowDelegate._windowDidResize_block
-	.quad	L_OBJC_METH_VAR_NAME_.7
-	.quad	L_OBJC_METH_VAR_TYPE_.8
+	.quad	L_OBJC_METH_VAR_NAME_.10
+	.quad	L_OBJC_METH_VAR_TYPE_.11
 	.long	3
 	.long	8
 	.quad	_OBJC_IVAR_$_MACHWindowDelegate._windowShouldClose_block
-	.quad	L_OBJC_METH_VAR_NAME_.9
-	.quad	L_OBJC_METH_VAR_TYPE_.8
+	.quad	L_OBJC_METH_VAR_NAME_.12
+	.quad	L_OBJC_METH_VAR_TYPE_.11
+	.long	3
+	.long	8
+	.quad	_OBJC_IVAR_$_MACHWindowDelegate._windowDidChangeBackingProperties_block
+	.quad	L_OBJC_METH_VAR_NAME_.13
+	.quad	L_OBJC_METH_VAR_TYPE_.11
+	.long	3
+	.long	8
+	.quad	_OBJC_IVAR_$_MACHWindowDelegate._windowDidBecomeKey_block
+	.quad	L_OBJC_METH_VAR_NAME_.14
+	.quad	L_OBJC_METH_VAR_TYPE_.11
+	.long	3
+	.long	8
+	.quad	_OBJC_IVAR_$_MACHWindowDelegate._windowDidResignKey_block
+	.quad	L_OBJC_METH_VAR_NAME_.15
+	.quad	L_OBJC_METH_VAR_TYPE_.11
 	.long	3
 	.long	8
 
@@ -215,7 +386,7 @@ __OBJC_$_INSTANCE_VARIABLES_MACHWindowDelegate:
 __OBJC_CLASS_RO_$_MACHWindowDelegate:
 	.long	388
 	.long	8
-	.long	24
+	.long	48
 	.space	4
 	.quad	L_OBJC_CLASS_NAME_.1
 	.quad	L_OBJC_CLASS_NAME_
