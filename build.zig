@@ -16,15 +16,6 @@ pub fn build(b: *std.Build) void {
         module.linkFramework("AppKit", .{});
         module.linkFramework("CoreVideo", .{});
         module.linkFramework("QuartzCore", .{});
-        if (target.result.cpu.arch == .x86_64) {
-            module.addAssemblyFile(b.path("MACHAppDelegate_x86_64_apple_macos12.s"));
-            module.addAssemblyFile(b.path("MACHWindowDelegate_x86_64_apple_macos12.s"));
-            module.addAssemblyFile(b.path("MACHView_x86_64_apple_macos12.s"));
-        } else {
-            module.addAssemblyFile(b.path("MACHAppDelegate_arm64_apple_macos12.s"));
-            module.addAssemblyFile(b.path("MACHWindowDelegate_arm64_apple_macos12.s"));
-            module.addAssemblyFile(b.path("MACHView_arm64_apple_macos12.s"));
-        }
     } else {
         module.linkFramework("UIKit", .{});
         // TODO: Add iOS asm files once they are generated.
@@ -51,15 +42,6 @@ pub fn build(b: *std.Build) void {
         unit_tests.root_module.linkFramework("QuartzCore", .{});
         unit_tests.root_module.linkFramework("AVFAudio", .{});
         unit_tests.root_module.linkFramework("CoreMIDI", .{});
-        if (target.result.cpu.arch == .x86_64) {
-            unit_tests.root_module.addAssemblyFile(b.path("MACHAppDelegate_x86_64_apple_macos12.s"));
-            unit_tests.root_module.addAssemblyFile(b.path("MACHWindowDelegate_x86_64_apple_macos12.s"));
-            unit_tests.root_module.addAssemblyFile(b.path("MACHView_x86_64_apple_macos12.s"));
-        } else {
-            unit_tests.root_module.addAssemblyFile(b.path("MACHAppDelegate_arm64_apple_macos12.s"));
-            unit_tests.root_module.addAssemblyFile(b.path("MACHWindowDelegate_arm64_apple_macos12.s"));
-            unit_tests.root_module.addAssemblyFile(b.path("MACHView_arm64_apple_macos12.s"));
-        }
     } else {
         unit_tests.root_module.linkFramework("UIKit", .{});
     }
