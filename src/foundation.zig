@@ -161,12 +161,17 @@ pub const Range = extern struct {
     }
 };
 
+pub const RangePointer = *Range;
+pub const StringEncodingConversionOptions = UInteger;
+pub const StringEncodingConversionAllowLossy: StringEncodingConversionOptions = 1;
+pub const StringEncodingConversionExternalRepresentation: StringEncodingConversionOptions = 2;
+
 // ------------------------------------------------------------------------------------------------
 // Classes
 
 pub fn Array(comptime ObjectType: type) type {
     return opaque {
-        pub const InternalInfo = objc.ExternClass("NSArray", @This(), ObjectInterface, .{Copying});
+        pub const InternalInfo = objc.ExternClass("NSArray", @This(), ObjectInterface, &.{Copying});
         pub const as = InternalInfo.as;
         pub const retain = InternalInfo.retain;
         pub const release = InternalInfo.release;
@@ -922,9 +927,9 @@ pub const String = opaque {
     pub fn getCString_maxLength_encoding(self_: *@This(), buffer_: *u8, maxBufferCount_: UInteger, encoding_: StringEncoding) bool {
         return objc.msgSend(self_, "getCString:maxLength:encoding:", bool, .{ buffer_, maxBufferCount_, encoding_ });
     }
-    // pub fn getBytes_maxLength_usedLength_encoding_options_range_remainingRange(self_: *@This(), buffer_: ?*anyopaque, maxBufferCount_: UInteger, usedBufferCount_: ?*UInteger, encoding_: StringEncoding, options_: StringEncodingConversionOptions, range_: Range, leftover_: RangePointer) bool {
-    //     return @as(*const fn (*@This(), *c.objc_selector, ?*anyopaque, UInteger, ?*UInteger, StringEncoding, StringEncodingConversionOptions, Range, RangePointer) callconv(.C) bool, @ptrCast(&c.objc_msgSend))(self_, "getBytes:maxLength:usedLength:encoding:options:range:remainingRange:", buffer_, maxBufferCount_, usedBufferCount_, encoding_, options_, range_, leftover_);
-    // }
+    pub fn getBytes_maxLength_usedLength_encoding_options_range_remainingRange(self_: *@This(), buffer_: ?*anyopaque, maxBufferCount_: UInteger, usedBufferCount_: ?*UInteger, encoding_: StringEncoding, options_: StringEncodingConversionOptions, range_: Range, leftover_: RangePointer) bool {
+        return objc.msgSend(self_, "getBytes:maxLength:usedLength:encoding:options:range:remainingRange:", bool, .{ buffer_, maxBufferCount_, usedBufferCount_, encoding_, options_, range_, leftover_ });
+    }
     pub fn maximumLengthOfBytesUsingEncoding(self_: *@This(), enc_: StringEncoding) UInteger {
         return objc.msgSend(self_, "maximumLengthOfBytesUsingEncoding:", UInteger, .{enc_});
     }
@@ -1221,6 +1226,24 @@ pub const URL = opaque {
     }
     pub fn fileSystemRepresentation(self_: *@This()) [*:0]const u8 {
         return objc.msgSend(self_, "fileSystemRepresentation", [*:0]const u8, .{});
+    }
+};
+
+pub const AttributedString = opaque {
+    pub const InternalInfo = objc.ExternClass("NSAttributedString", @This(), ObjectInterface, &.{});
+    pub const as = InternalInfo.as;
+    pub const retain = InternalInfo.retain;
+    pub const release = InternalInfo.release;
+    pub const autorelease = InternalInfo.autorelease;
+    pub const new = InternalInfo.new;
+    pub const alloc = InternalInfo.alloc;
+    pub const allocInit = InternalInfo.allocInit;
+
+    pub fn string(self_: *@This()) *String {
+        return objc.msgSend(self_, "string", *String, .{});
+    }
+    pub fn length(self_: *@This()) UInteger {
+        return objc.msgSend(self_, "length", UInteger, .{});
     }
 };
 
