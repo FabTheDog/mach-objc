@@ -171,6 +171,12 @@ pub const MetalDisplayLink = opaque {
     pub fn invalidate(self_: *@This()) void {
         return objc.msgSend(self_, "invalidate", void, .{});
     }
+    pub fn delegate(self_: *@This()) ?*MetalDisplayLinkDelegate {
+        return objc.msgSend(self_, "delegate", ?*MetalDisplayLinkDelegate, .{});
+    }
+    pub fn setDelegate(self_: *@This(), delegate_: ?*MetalDisplayLinkDelegate) void {
+        return objc.msgSend(self_, "setDelegate:", void, .{delegate_});
+    }
     pub fn isPaused(self_: *@This()) bool {
         return objc.msgSend(self_, "isPaused", bool, .{});
     }

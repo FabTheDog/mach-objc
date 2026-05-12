@@ -221,6 +221,9 @@ pub const Application = opaque {
     pub fn nextEventMatchingMask_untilDate_inMode_dequeue(self_: *@This(), mask_: EventMask, expiration_: ?*Date, mode_: RunLoopMode, deqFlag_: bool) ?*Event {
         return objc.msgSend(self_, "nextEventMatchingMask:untilDate:inMode:dequeue:", ?*Event, .{ mask_, expiration_, mode_, deqFlag_ });
     }
+    pub fn currentEvent(self_: *@This()) ?*Event {
+        return objc.msgSend(self_, "currentEvent", ?*Event, .{});
+    }
 };
 
 pub const Responder = opaque {
@@ -232,6 +235,10 @@ pub const Responder = opaque {
     pub const new = InternalInfo.new;
     pub const alloc = InternalInfo.alloc;
     pub const allocInit = InternalInfo.allocInit;
+
+    pub fn interpretKeyEvents(self_: *@This(), eventArray_: *ns.Array(*Event)) void {
+        return objc.msgSend(self_, "interpretKeyEvents:", void, .{eventArray_});
+    }
 };
 
 pub const Window = opaque {
@@ -483,6 +490,9 @@ pub const View = opaque {
     pub fn window(self_: *@This()) ?*Window {
         return objc.msgSend(self_, "window", ?*Window, .{});
     }
+    pub fn visibleRect(self_: *@This()) Rect {
+        return objc.msgSend(self_, "visibleRect", Rect, .{});
+    }
     pub fn setWantsLayer(self_: *@This(), wantsLayer_: bool) void {
         return objc.msgSend(self_, "setWantsLayer:", void, .{wantsLayer_});
     }
@@ -491,6 +501,9 @@ pub const View = opaque {
     }
     pub fn setLayer(self_: *@This(), layer_: *ca.Layer) void {
         return objc.msgSend(self_, "setLayer:", void, .{layer_});
+    }
+    pub fn addTrackingArea(self_: *@This(), trackingArea_: *TrackingArea) void {
+        return objc.msgSend(self_, "addTrackingArea:", void, .{trackingArea_});
     }
 };
 
