@@ -2003,6 +2003,8 @@ fn generateQuartzCore(generator: anytype) !void {
         [2][]const u8{ "CAMetalDisplayLink", "invalidate" },
         [2][]const u8{ "CAMetalDisplayLink", "isPaused" },
         [2][]const u8{ "CAMetalDisplayLink", "setPaused" },
+        [2][]const u8{ "CAMetalDisplayLink", "delegate" },
+        [2][]const u8{ "CAMetalDisplayLink", "setDelegate" },
 
         // CAMetalDisplayLinkUpdate
         [2][]const u8{ "CAMetalDisplayLinkUpdate", "drawable" },
@@ -2034,6 +2036,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSApplication", "activateIgnoringOtherApps" },
         [2][]const u8{ "NSApplication", "nextEventMatchingMask:untilDate:inMode:dequeue" },
         [2][]const u8{ "NSApplication", "sendEvent" },
+        [2][]const u8{ "NSApplication", "currentEvent" },
 
         [2][]const u8{ "NSWindow", "initWithContentRect:styleMask:backing:defer:screen" },
         [2][]const u8{ "NSWindow", "isReleasedWhenClosed" },
@@ -2095,6 +2098,16 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSView", "setBoundsOrigin" },
         [2][]const u8{ "NSView", "setBoundsSize" },
         [2][]const u8{ "NSView", "window" },
+        [2][]const u8{ "NSView", "visibleRect" },
+        [2][]const u8{ "NSView", "addTrackingArea" },
+
+        [2][]const u8{ "NSResponder", "interpretKeyEvents" },
+
+        [2][]const u8{ "NSTrackingArea", "initWithRect:options:owner:userInfo" },
+        [2][]const u8{ "NSTrackingArea", "rect" },
+        [2][]const u8{ "NSTrackingArea", "options" },
+        [2][]const u8{ "NSTrackingArea", "owner" },
+        [2][]const u8{ "NSTrackingArea", "userInfo" },
 
         [2][]const u8{ "NSDate", "distantPast" },
 
