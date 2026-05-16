@@ -2451,78 +2451,6 @@ const framework_specs = [_]FrameworkSpec{
     },
 };
 
-const AsmSpec = struct {
-    source: []const u8,
-    output_arm64: []const u8,
-    output_x86_64: []const u8,
-};
-
-const asm_specs = [_]AsmSpec{
-    .{
-        .source = "MACHAppDelegate.m",
-        .output_arm64 = "MACHAppDelegate_arm64_apple_macos12.s",
-        .output_x86_64 = "MACHAppDelegate_x86_64_apple_macos12.s",
-    },
-    .{
-        .source = "MACHWindowDelegate.m",
-        .output_arm64 = "MACHWindowDelegate_arm64_apple_macos12.s",
-        .output_x86_64 = "MACHWindowDelegate_x86_64_apple_macos12.s",
-    },
-    .{
-        .source = "MACHView.m",
-        .output_arm64 = "MACHView_arm64_apple_macos12.s",
-        .output_x86_64 = "MACHView_x86_64_apple_macos12.s",
-    },
-};
-
-fn postProcessAsm(allocator: std.mem.Allocator, input: []const u8) std.mem.Allocator.Error!std.ArrayList(u8) {
-    var result: std.ArrayList(u8) = .empty;
-    var line_start: usize = 0;
-    while (line_start < input.len) {
-        const line_end = std.mem.indexOfScalar(u8, input[line_start..], '\n') orelse input.len - line_start;
-        const line = input[line_start .. line_start + line_end];
-        line_start += line_end + 1;
-
-        // Skip lines matching "    .build_version " (4 spaces, .build_version, space)
-        if (line.len >= 20 and std.mem.startsWith(u8, line, "    .build_version ")) continue;
-
-        // Skip whole-line comments starting with ";"
-        if (line.len > 0 and line[0] == ';') continue;
-
-        // Skip whole-line comments starting with "##"
-        if (std.mem.startsWith(u8, line, "##")) continue;
-
-        // Process the line: replace 0x01 bytes and strip trailing comments
-        const result_line_start = result.items.len;
-        for (line) |byte| {
-            if (byte == 0x01) {
-                try result.appendSlice(allocator, "\\x01");
-            } else {
-                try result.append(allocator, byte);
-            }
-        }
-
-        // Strip trailing " ; ..." comments (require preceding space, matching original sed pattern)
-        const current_line = result.items[result_line_start..];
-        if (std.mem.lastIndexOf(u8, current_line, " ; ")) |rel_idx| {
-            var strip_start = result_line_start + rel_idx;
-            while (strip_start > result_line_start and result.items[strip_start - 1] == ' ') strip_start -= 1;
-            result.shrinkRetainingCapacity(strip_start);
-        }
-
-        // Strip trailing " ## ..." comments (require preceding space, matching original sed pattern)
-        const current_line2 = result.items[result_line_start..];
-        if (std.mem.lastIndexOf(u8, current_line2, " ## ")) |rel_idx| {
-            var strip_start = result_line_start + rel_idx;
-            while (strip_start > result_line_start and result.items[strip_start - 1] == ' ') strip_start -= 1;
-            result.shrinkRetainingCapacity(strip_start);
-        }
-
-        try result.append(allocator, '\n');
-    }
-    return result;
-}
-
 fn runCommand(allocator: std.mem.Allocator, io: std.Io, argv: []const []const u8) ![]u8 {
     const result = try std.process.run(allocator, io, .{
         .argv = argv,
@@ -2638,46 +2566,10 @@ fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: Framewor
     try file_writer.flush();
 }
 
-fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_dir: []const u8, include_dir: []const u8) !void {
+fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_dir: []const u8) !void {
     for (framework_specs) |spec| {
         try generateForFramework(allocator, io, spec, frameworks_dir);
     }
-
-    // Generate assembly files
-    const tmp_asm_path = ".zig-cache/tmp_asm_output.s";
-    for (asm_specs) |spec| {
-        const targets = [_]struct { target: []const u8, output: []const u8 }{
-            .{ .target = "aarch64-macos.12.0", .output = spec.output_arm64 },
-            .{ .target = "x86_64-macos.12.0", .output = spec.output_x86_64 },
-        };
-        for (targets) |t| {
-            const zig_cc_stdout = try runCommand(allocator, io, &.{
-                "zig",         "cc",
-                spec.source,   "-target",
-                t.target,      "-S",
-                "-Os",         "-fomit-frame-pointer",
-                "-fobjc-arc",  "-fno-objc-exceptions",
-                "-o",          tmp_asm_path,
-                "-iframework", frameworks_dir,
-                "-isystem",    include_dir,
-            });
-            allocator.free(zig_cc_stdout);
-
-            const raw_asm = try readFileContents(allocator, io, tmp_asm_path);
-            defer allocator.free(raw_asm);
-
-            var processed = try postProcessAsm(allocator, raw_asm);
-            defer processed.deinit(allocator);
-
-            std.Io.Dir.writeFile(.cwd(), io, .{ .sub_path = t.output, .data = processed.items }) catch |err| {
-                std.log.warn("failed to write {s}: {}", .{ t.output, err });
-                return err;
-            };
-        }
-    }
-
-    // Clean up temp file
-    std.Io.Dir.deleteFile(.cwd(), io, tmp_asm_path) catch {};
 
     // Run zig fmt on generated files
     const fmt_stdout = try runCommand(allocator, io, &.{
@@ -2744,9 +2636,8 @@ fn usage() void {
         \\
         \\Options:
         \\  --framework  Metal,AVFAudio,CoreMIDI,QuartzCore,AppKit,CoreVideo  generate a single framework to stdout
-        \\  --generate-all                                         generate all frameworks and assembly files
+        \\  --generate-all                                         generate all frameworks
         \\  --frameworks-dir <path>                                path to Frameworks directory (used with --generate-all)
-        \\  --include-dir <path>                                   path to include directory (used with --generate-all)
         \\  --help
         \\
     , .{});
@@ -2772,7 +2663,6 @@ pub fn main(init: std.process.Init) anyerror!void {
     var framework: ?Framework = null;
     var generate_all = false;
     var frameworks_dir: []const u8 = "./xcode-frameworks/Frameworks";
-    var include_dir: []const u8 = "./xcode-frameworks/include";
 
     while (args_iter.next()) |arg| {
         if (std.mem.eql(u8, arg, "--framework")) {
@@ -2797,16 +2687,11 @@ pub fn main(init: std.process.Init) anyerror!void {
                 usage();
                 std.process.exit(1);
             };
-        } else if (std.mem.eql(u8, arg, "--include-dir")) {
-            include_dir = args_iter.next() orelse {
-                usage();
-                std.process.exit(1);
-            };
         }
     }
 
     if (generate_all) {
-        try generateAllFrameworks(allocator, io, frameworks_dir, include_dir);
+        try generateAllFrameworks(allocator, io, frameworks_dir);
     } else if (framework) |fw| {
         try generateSingleFramework(allocator, io, fw);
     } else {

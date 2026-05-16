@@ -70,8 +70,6 @@ pub fn build(b: *std.Build) void {
     if (b.lazyDependency("xcode_frameworks", .{})) |dep| {
         gen_run.addArg("--frameworks-dir");
         gen_run.addDirectoryArg(dep.path("Frameworks"));
-        gen_run.addArg("--include-dir");
-        gen_run.addDirectoryArg(dep.path("include"));
     }
 
     const generate_step = b.step("generate", "Generate files");
