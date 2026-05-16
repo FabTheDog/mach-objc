@@ -1,4 +1,17 @@
 const std = @import("std");
+const builtin = @import("builtin");
+
+// Pure-Zig implementations of the MACH* Objective-C classes. Each
+// reference forces the corresponding `DefineClass(...)` call to run,
+// which emits the class metadata + IMP exports into the appropriate
+// Mach-O sections at link time.
+comptime {
+    if (builtin.os.tag == .macos) {
+        _ = @import("MACHAppDelegate.zig").MACHAppDelegate;
+        _ = @import("MACHWindowDelegate.zig").MACHWindowDelegate;
+        _ = @import("MACHView.zig").MACHView;
+    }
+}
 
 pub const objc = @import("objc.zig");
 pub const avf_audio = @import("avf_audio.zig");
