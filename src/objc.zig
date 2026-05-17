@@ -190,6 +190,12 @@ pub fn ExternClass(comptime name: []const u8, T: type, Super: type, comptime pro
     return struct {
         pub const class_name = name;
 
+        /// Returns a typed Zig function pointer for an Obj-C `direct_method` on this class.
+        /// `Fn` must match the IMP's C ABI signature.
+        pub fn directMethod(comptime sel: []const u8, comptime Fn: type) *const Fn {
+            return @extern(*const Fn, .{ .name = "\x01-[" ++ name ++ " " ++ sel ++ "]" });
+        }
+
         pub fn class() *Class {
             // This global asm lives inside the `class()` function so we only generate it if `class()` is actually called.
             const GlobalAsm = struct {
@@ -511,6 +517,17 @@ const Accessor = struct {
 
         pub fn slot(r: @This(), obj: ?*anyopaque) ?*?*anyopaque {
             return ivarSlot(obj, r.offset);
+        }
+
+        pub fn get(r: @This(), obj: ?*anyopaque) ?*anyopaque {
+            const slot_ptr = ivarSlot(obj, r.offset) orelse return null;
+            return slot_ptr.*;
+        }
+
+        /// Direct store; no ARC bookkeeping.
+        pub fn set(r: @This(), obj: ?*anyopaque, value: ?*anyopaque) void {
+            const slot_ptr = ivarSlot(obj, r.offset) orelse return;
+            slot_ptr.* = value;
         }
     };
 
@@ -891,15 +908,16 @@ fn hasMethod(comptime methods: []const Method, comptime sel: []const u8) bool {
     return false;
 }
 
-/// Defines an Objective-C class in Zig instead of Objective-C, by directly emitting the Mach-O
-/// metadata that the Obj-C runtime scans for at image load.
-///
-/// Define a class with `DefineClass(...)`, passing a struct that describes it, e.g.:
+/// Defines an Objective-C class in pure Zig. Returns a ClassWrapper which helps enables usage and
+/// instantiation of the class from Zig.
 ///
 /// ```zig
 /// pub const MyWindowDelegate = objc.DefineClass(struct {
 ///     pub const class_name = "MyWindowDelegate";
 ///     pub const superclass = foundation.ObjectInterface;
+///
+///     // Optional. Enables comptime-checked `as(Base)` upcasts to a protocol.
+///     pub const protocols = &.{app_kit.WindowDelegate};
 ///
 ///     pub const Self = objc.Self(class_name);
 ///
@@ -926,8 +944,11 @@ fn hasMethod(comptime methods: []const Method, comptime sel: []const u8) bool {
 ///     };
 /// });
 ///
-/// // Force class metadata to be emitted into the binary:
-/// comptime { _ = MyWindowDelegate; }
+/// // The returned ClassWrapper can be used to instantiate the class, set implementation variables,
+/// // and call methods/direct_methods:
+/// const d = MyWindowDelegate.allocInit();
+/// d.set(.observer, ctx);
+/// d.call(.@"windowDidResize:", .{null});
 /// ```
 pub fn DefineClass(comptime Spec: type) type {
     @setEvalBranchQuota(100_000);
@@ -1162,5 +1183,150 @@ pub fn DefineClass(comptime Spec: type) type {
     _ = &Mod.classlist_entry;
     _ = &Mod.image_info;
 
-    return opaque {};
+    return ClassWrapper(Spec);
+}
+
+/// The consumer-facing wrapper type returned by `DefineClass`.
+fn ClassWrapper(comptime Spec: type) type {
+    const protocols: []const type = if (@hasDecl(Spec, "protocols")) Spec.protocols else &.{};
+
+    const CallTag = comptime CallTagEnum(Spec);
+    const method_count = if (@hasDecl(Spec, "methods")) @typeInfo(Spec.methods).@"struct".decls.len else 0;
+    const SpecSelf = if (@hasDecl(Spec, "Self")) Spec.Self else opaque {};
+
+    return opaque {
+        /// InternalInfo to allow a Zig-defined class to act as the superclass for another class
+        pub const InternalInfo = @This();
+        pub const class_name = Spec.class_name;
+
+        /// Re-export of the spec's `implementation` namespace. Use this to read/write ivars
+        /// from outside the class definition:
+        ///
+        ///     MACHView.implementation._ctx.set(view, ctx);
+        ///     MACHView.implementation._displayLink.get(view);
+        ///
+        /// Inside the spec's own method IMPs you can refer to it as bare `implementation`.
+        pub const implementation = if (@hasDecl(Spec, "implementation")) Spec.implementation else {};
+
+        const Extern = ExternClass(Spec.class_name, @This(), Spec.superclass, protocols);
+        pub const class = Extern.class;
+        pub const canCastTo = Extern.canCastTo;
+        pub const as = Extern.as;
+        pub const new = Extern.new;
+        pub const alloc = Extern.alloc;
+        pub const allocInit = Extern.allocInit;
+        pub const retain = Extern.retain;
+        pub const release = Extern.release;
+        pub const autorelease = Extern.autorelease;
+
+        /// Calls an Obj-C method or direct method on the class.
+        ///
+        /// The tag is the selector with any trailing `:` stripped and internal `:` replaced by `_`,
+        /// e.g. `initWithFrame:` -> `.initWithFrame` or `metalDisplayLink:needsUpdate:` -> `.metalDisplayLink_needsUpdate`
+        /// The tag namespace is the union of `Spec.methods` and `Spec.direct_methods`.
+        ///
+        /// Return type is inferred from the IMP signature, with `Self` rewritten to `@This()`
+        pub fn call(o: *@This(), comptime tag: CallTag, args: anytype) CallReturn(tag) {
+            if (comptime @typeInfo(CallTag).@"enum".fields.len == 0) {
+                @compileError(Spec.class_name ++ " declares no methods");
+            }
+            switch (tag) {
+                inline else => |t| {
+                    const idx = comptime @intFromEnum(t);
+                    if (comptime idx < method_count) {
+                        const decls = comptime @typeInfo(Spec.methods).@"struct".decls;
+                        const sel = comptime decls[idx].name;
+                        return msgSend(o, sel, CallReturn(t), args);
+                    } else {
+                        const decls = comptime @typeInfo(Spec.direct_methods).@"struct".decls;
+                        const sel = comptime decls[idx - method_count].name;
+                        const RawFn = @TypeOf(@field(Spec.direct_methods, sel));
+                        const Fn = comptime SubstituteSelfInFn(RawFn, SpecSelf, @This());
+                        const imp = Extern.directMethod(sel, Fn);
+                        return @call(.auto, imp, .{o} ++ args);
+                    }
+                },
+            }
+        }
+
+        fn CallReturn(comptime tag: CallTag) type {
+            const idx = comptime @intFromEnum(tag);
+            const container, const decl_idx = if (idx < method_count)
+                .{ Spec.methods, idx }
+            else
+                .{ Spec.direct_methods, idx - method_count };
+            const decls = @typeInfo(container).@"struct".decls;
+            const fn_info = @typeInfo(@TypeOf(@field(container, decls[decl_idx].name))).@"fn";
+            return SubstituteSelf(fn_info.return_type.?, SpecSelf, @This());
+        }
+    };
+}
+
+/// Builds an enum over the union of `Spec.methods` and `Spec.direct_methods` decl names.
+fn CallTagEnum(comptime Spec: type) type {
+    const m_decls: []const std.builtin.Type.Declaration = if (@hasDecl(Spec, "methods"))
+        @typeInfo(Spec.methods).@"struct".decls
+    else
+        &.{};
+    const d_decls: []const std.builtin.Type.Declaration = if (@hasDecl(Spec, "direct_methods"))
+        @typeInfo(Spec.direct_methods).@"struct".decls
+    else
+        &.{};
+    const total = m_decls.len + d_decls.len;
+    const Tag = if (total == 0) u0 else std.math.IntFittingRange(0, total - 1);
+
+    var names: [total][]const u8 = undefined;
+    var values: [total]Tag = undefined;
+    for (m_decls, 0..) |d, i| {
+        names[i] = comptime selectorToTagName(d.name);
+        values[i] = @intCast(i);
+    }
+    for (d_decls, 0..) |d, j| {
+        const i = m_decls.len + j;
+        names[i] = comptime selectorToTagName(d.name);
+        values[i] = @intCast(i);
+    }
+    const final_names = names;
+    const final_values = values;
+    return @Enum(Tag, .exhaustive, &final_names, &final_values);
+}
+
+fn selectorToTagName(comptime selector: []const u8) []const u8 {
+    var out: [selector.len]u8 = undefined;
+    var n: usize = 0;
+    for (selector, 0..) |c, i| {
+        if (c == ':') {
+            if (i == selector.len - 1) continue; // strip trailing
+            out[n] = '_';
+            n += 1;
+        } else {
+            out[n] = c;
+            n += 1;
+        }
+    }
+    const final = out[0..n].*;
+    return &final;
+}
+
+fn SubstituteSelf(comptime T: type, comptime SpecSelf: type, comptime Wrapper: type) type {
+    if (T == SpecSelf) return Wrapper;
+    if (T == *SpecSelf) return *Wrapper;
+    if (T == ?*SpecSelf) return ?*Wrapper;
+    return T;
+}
+
+/// Substitutes `SpecSelf` for `Wrapper` in every param + return of a function type with
+/// SubstituteSelf semantics.
+fn SubstituteSelfInFn(comptime Fn: type, comptime SpecSelf: type, comptime Wrapper: type) type {
+    const info = @typeInfo(Fn).@"fn";
+    var param_types: [info.params.len]type = undefined;
+    var param_attrs: [info.params.len]std.builtin.Type.Fn.Param.Attributes = undefined;
+    for (info.params, 0..) |p, i| {
+        param_types[i] = SubstituteSelf(p.type.?, SpecSelf, Wrapper);
+        param_attrs[i] = .{};
+    }
+    const new_ret = SubstituteSelf(info.return_type.?, SpecSelf, Wrapper);
+    const final_params = param_types;
+    const final_attrs = param_attrs;
+    return @Fn(&final_params, &final_attrs, new_ret, .{ .@"callconv" = info.calling_convention });
 }
