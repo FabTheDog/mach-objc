@@ -293,34 +293,50 @@ pub const Parser = struct {
         return Parser{ .allocator = allocator, .lookahead = try lexer.next(), .lexer = lexer };
     }
 
+    /// Returns true if `text` is a known Apple SDK attribute-macro identifier (e.g.
+    /// `API_AVAILABLE`, `NS_SWIFT_NAME`, `NS_EXTENSION_UNAVAILABLE_IOS`) whose parenthesized
+    /// arguments should be skipped during type parsing.
+    fn isAttributeMacro(text: []const u8) bool {
+        const list = [_][]const u8{
+            // API_*
+            "API_AVAILABLE",
+            "API_UNAVAILABLE",
+            "API_DEPRECATED",
+            "API_DEPRECATED_WITH_REPLACEMENT",
+            // NS_*
+            "NS_AVAILABLE",
+            "NS_AVAILABLE_MAC",
+            "NS_AVAILABLE_IOS",
+            "NS_DEPRECATED",
+            "NS_DEPRECATED_MAC",
+            "NS_DEPRECATED_IOS",
+            "NS_EXTENSION_UNAVAILABLE",
+            "NS_EXTENSION_UNAVAILABLE_IOS",
+            "NS_EXTENSION_UNAVAILABLE_MAC",
+            "NS_SWIFT_NAME",
+            "NS_SWIFT_UNAVAILABLE",
+            "NS_SWIFT_UNAVAILABLE_FROM_ASYNC",
+            "NS_REFINED_FOR_SWIFT_ASYNC",
+            // UIKIT_*
+            "UIKIT_AVAILABLE_TVOS_ONLY",
+            "UIKIT_AVAILABLE_IOS_ONLY",
+            "UIKIT_EXTERN",
+            "UI_APPEARANCE_SELECTOR",
+            // Misc
+            "CF_SWIFT_NAME",
+            "CG_AVAILABLE_STARTING",
+            "CG_AVAILABLE_BUT_DEPRECATED",
+        };
+        for (list) |m| if (std.mem.eql(u8, text, m)) return true;
+        return false;
+    }
+
     pub fn parseType(self: *Self) !Type {
-        if (self.lookahead.kind == .id) {
-            const text = self.lookahead.text;
-            if (std.mem.eql(u8, text, "API_AVAILABLE")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "API_UNAVAILABLE")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "API_DEPRECATED")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "API_DEPRECATED_WITH_REPLACEMENT")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "NS_AVAILABLE")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "NS_AVAILABLE_MAC")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "NS_SWIFT_UNAVAILABLE")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            } else if (std.mem.eql(u8, text, "NS_SWIFT_UNAVAILABLE_FROM_ASYNC")) {
-                try self.match(.id);
-                try self.skipParenContent();
-            }
+        // Skip Apple SDK availability/macro annotations like API_AVAILABLE(...),
+        // NS_AVAILABLE(...), NS_EXTENSION_UNAVAILABLE_IOS(...), NS_SWIFT_NAME(...), etc.
+        while (self.lookahead.kind == .id and isAttributeMacro(self.lookahead.text)) {
+            try self.match(.id);
+            if (self.lookahead.kind == .lparen) try self.skipParenContent();
         }
         const is_const = self.lookahead.kind == .kw_const;
         if (is_const)
@@ -435,27 +451,18 @@ pub const Parser = struct {
             },
             .kw_class => {
                 try self.match(.kw_class);
-                const props = try self.parsePointerProps(is_const);
-
-                const t = Type{ .name = "objc.Class" };
-
-                const child = try self.allocator.create(Type);
-                child.* = t;
-
-                return Type{ .pointer = .{
-                    .is_single = true,
-                    .is_const = props.is_const,
-                    .is_optional = props.is_optional,
-                    .child = child,
-                } };
+                // Accept an optional Objective-C protocol qualifier, e.g. `Class<UIFooBar>` —
+                // we discard it (objc.Class doesn't carry protocol-conformance information).
+                if (self.lookahead.kind == .less) {
+                    try self.match(.less);
+                    _ = try self.parseTypeList();
+                    try self.match(.greater);
+                }
+                return self.parsePointerSuffix(.{ .name = "objc.Class" }, is_const, true);
             },
             .kw_sel => {
                 try self.match(.kw_sel);
-                const t = Type{ .name = "c.objc_selector" };
-                const child = try self.allocator.create(Type);
-                child.* = t;
-
-                return Type{ .pointer = .{ .is_single = true, .is_const = is_const, .is_optional = false, .child = child } };
+                return self.parsePointerSuffix(.{ .name = "objc.Selector" }, is_const, true);
             },
             .kw_id => {
                 try self.match(.kw_id);
@@ -651,7 +658,19 @@ pub const Parser = struct {
         if (self.lookahead.kind == k) {
             self.lookahead = try self.lexer.next();
         } else {
-            std.debug.print("Expected {any} but found {any}\n", .{ k, self.lookahead.kind });
+            // Show ~80 bytes of source context to make it possible to identify the offending decl.
+            const ctx_start = if (self.lexer.offset > 80) self.lexer.offset - 80 else 0;
+            const ctx_end = @min(self.lexer.offset + 40, self.lexer.source.len);
+            std.debug.print(
+                "Expected {any} but found {any} (text='{s}') near:\n  ...{s}<<HERE>>{s}...\n",
+                .{
+                    k,
+                    self.lookahead.kind,
+                    self.lookahead.text,
+                    self.lexer.source[ctx_start..self.lexer.offset],
+                    self.lexer.source[self.lexer.offset..ctx_end],
+                },
+            );
             return error.UnexpectedToken;
         }
     }
@@ -1168,9 +1187,21 @@ fn Generator(comptime WriterType: type) type {
             }
             try self.writer.writeByte('\n');
 
-            for (container.methods.items) |method| {
+            // Track method names we've already emitted for this container so that duplicate
+            // ObjCMethodDecls (e.g. a property getter declared both as @property and as a
+            // separate method) don't produce duplicate Zig declarations. We dedupe by selector
+            // + instance/class flag, since a class method and instance method with the same
+            // selector can coexist (handled via the T_ prefix in `generateMethod`).
+            var seen = std.array_list.Managed([]const u8).init(self.allocator);
+            defer seen.deinit();
+            method_loop: for (container.methods.items) |method| {
+                const key = try std.fmt.allocPrint(self.allocator, "{s}|{}", .{ method.name, method.instance });
+                defer self.allocator.free(key);
+                for (seen.items) |s| if (std.mem.eql(u8, s, key)) continue :method_loop;
+                try seen.append(try self.allocator.dupe(u8, key));
                 try self.generateMethod(container, method);
             }
+            for (seen.items) |s| self.allocator.free(s);
 
             try self.writer.print("}};\n", .{});
             if (container.type_params.items.len > 0) {
@@ -1434,11 +1465,23 @@ fn Generator(comptime WriterType: type) type {
         }
 
         fn generateTypePrefix(self: *Self, name: []const u8) !void {
+            // If this type is locally added to the current file (e.g. NSObject when generating
+            // UIKit), reference it without a foreign-namespace prefix even though its canonical
+            // namespace differs from this file's. Otherwise we'd emit `ns.ObjectInterface = ...`
+            // as a declaration, which is a syntax error.
+            if (self.isLocallyDefined(name)) return;
+
             const namespace = getNamespace(name);
             if (namespace.len > 0 and !std.mem.eql(u8, namespace, self.namespace)) {
                 try self.generateLower(namespace);
                 try self.writer.writeAll(".");
             }
+        }
+
+        fn isLocallyDefined(self: *Self, name: []const u8) bool {
+            for (self.containers.items) |c| if (std.mem.eql(u8, c.name, name)) return true;
+            for (self.enums.items) |e| if (std.mem.eql(u8, e.name, name)) return true;
+            return false;
         }
 
         fn generateContainerSuffix(self: *Self, container: *Container) !void {
@@ -2388,6 +2431,201 @@ fn generateAppKit(generator: anytype) !void {
     // try generator.addProtocol("NSPreviewRepresentableActivityItem");
 }
 
+fn generateUIKit(generator: anytype) !void {
+    generator.namespace = "UI";
+    generator.allow_methods = &.{
+        // NSObject (TODO: move to generateFoundation)
+        [2][]const u8{ "NSObject", "copy" },
+        [2][]const u8{ "NSObject", "retainCount" },
+
+        // UIApplication
+        [2][]const u8{ "UIApplication", "sharedApplication" },
+        [2][]const u8{ "UIApplication", "delegate" },
+        [2][]const u8{ "UIApplication", "setDelegate" },
+
+        // UIScreen
+        [2][]const u8{ "UIScreen", "mainScreen" },
+        [2][]const u8{ "UIScreen", "screens" },
+        [2][]const u8{ "UIScreen", "bounds" },
+        [2][]const u8{ "UIScreen", "nativeBounds" },
+        [2][]const u8{ "UIScreen", "scale" },
+        [2][]const u8{ "UIScreen", "nativeScale" },
+
+        // UIWindow
+        [2][]const u8{ "UIWindow", "initWithFrame" },
+        [2][]const u8{ "UIWindow", "initWithWindowScene" },
+        [2][]const u8{ "UIWindow", "windowScene" },
+        [2][]const u8{ "UIWindow", "setWindowScene" },
+        [2][]const u8{ "UIWindow", "rootViewController" },
+        [2][]const u8{ "UIWindow", "setRootViewController" },
+        [2][]const u8{ "UIWindow", "makeKeyAndVisible" },
+        [2][]const u8{ "UIWindow", "isKeyWindow" },
+
+        // UIView
+        [2][]const u8{ "UIView", "initWithFrame" },
+        [2][]const u8{ "UIView", "layer" },
+        [2][]const u8{ "UIView", "bounds" },
+        [2][]const u8{ "UIView", "setBounds" },
+        [2][]const u8{ "UIView", "frame" },
+        [2][]const u8{ "UIView", "setFrame" },
+        [2][]const u8{ "UIView", "contentScaleFactor" },
+        [2][]const u8{ "UIView", "setContentScaleFactor" },
+        [2][]const u8{ "UIView", "backgroundColor" },
+        [2][]const u8{ "UIView", "setBackgroundColor" },
+        [2][]const u8{ "UIView", "setOpaque" },
+        [2][]const u8{ "UIView", "isOpaque" },
+        [2][]const u8{ "UIView", "addSubview" },
+        [2][]const u8{ "UIView", "addGestureRecognizer" },
+        [2][]const u8{ "UIView", "window" },
+        [2][]const u8{ "UIView", "setNeedsDisplay" },
+        [2][]const u8{ "UIView", "setNeedsLayout" },
+        [2][]const u8{ "UIView", "layoutIfNeeded" },
+
+        // UIViewController
+        [2][]const u8{ "UIViewController", "view" },
+        [2][]const u8{ "UIViewController", "setView" },
+
+        // UIResponder
+        [2][]const u8{ "UIResponder", "becomeFirstResponder" },
+        [2][]const u8{ "UIResponder", "resignFirstResponder" },
+        [2][]const u8{ "UIResponder", "canBecomeFirstResponder" },
+        [2][]const u8{ "UIResponder", "nextResponder" },
+
+        // UISceneConfiguration
+        [2][]const u8{ "UISceneConfiguration", "initWithName:sessionRole" },
+        [2][]const u8{ "UISceneConfiguration", "delegateClass" },
+        [2][]const u8{ "UISceneConfiguration", "setDelegateClass" },
+
+        // UIScene
+        [2][]const u8{ "UIScene", "session" },
+        [2][]const u8{ "UIScene", "activationState" },
+
+        // UISceneSession
+        [2][]const u8{ "UISceneSession", "role" },
+        [2][]const u8{ "UISceneSession", "configuration" },
+
+        // UIWindowScene
+        [2][]const u8{ "UIWindowScene", "screen" },
+        [2][]const u8{ "UIWindowScene", "windows" },
+
+        // UITouch
+        [2][]const u8{ "UITouch", "locationInView" },
+        [2][]const u8{ "UITouch", "previousLocationInView" },
+        [2][]const u8{ "UITouch", "phase" },
+        [2][]const u8{ "UITouch", "timestamp" },
+        [2][]const u8{ "UITouch", "tapCount" },
+        [2][]const u8{ "UITouch", "force" },
+        [2][]const u8{ "UITouch", "maximumPossibleForce" },
+        [2][]const u8{ "UITouch", "type" },
+        [2][]const u8{ "UITouch", "view" },
+        [2][]const u8{ "UITouch", "window" },
+
+        // UIEvent
+        [2][]const u8{ "UIEvent", "timestamp" },
+        [2][]const u8{ "UIEvent", "allTouches" },
+        [2][]const u8{ "UIEvent", "type" },
+        [2][]const u8{ "UIEvent", "subtype" },
+
+        // UIPress / UIPressesEvent / UIKey
+        [2][]const u8{ "UIPress", "phase" },
+        [2][]const u8{ "UIPress", "type" },
+        [2][]const u8{ "UIPress", "force" },
+        [2][]const u8{ "UIPress", "key" },
+        [2][]const u8{ "UIPressesEvent", "allPresses" },
+        [2][]const u8{ "UIKey", "keyCode" },
+        [2][]const u8{ "UIKey", "modifierFlags" },
+        [2][]const u8{ "UIKey", "characters" },
+        [2][]const u8{ "UIKey", "charactersIgnoringModifiers" },
+
+        // UIGestureRecognizer
+        [2][]const u8{ "UIGestureRecognizer", "initWithTarget:action" },
+        [2][]const u8{ "UIGestureRecognizer", "state" },
+        [2][]const u8{ "UIGestureRecognizer", "locationInView" },
+        [2][]const u8{ "UIGestureRecognizer", "numberOfTouches" },
+
+        // UIPinchGestureRecognizer
+        [2][]const u8{ "UIPinchGestureRecognizer", "scale" },
+        [2][]const u8{ "UIPinchGestureRecognizer", "setScale" },
+        [2][]const u8{ "UIPinchGestureRecognizer", "velocity" },
+
+        // UIColor
+        [2][]const u8{ "UIColor", "blackColor" },
+        [2][]const u8{ "UIColor", "whiteColor" },
+        [2][]const u8{ "UIColor", "clearColor" },
+        [2][]const u8{ "UIColor", "colorWithRed:green:blue:alpha" },
+
+        // UIApplicationDelegate (selectors we plug into)
+        [2][]const u8{ "UIApplicationDelegate", "application:didFinishLaunchingWithOptions" },
+        [2][]const u8{ "UIApplicationDelegate", "application:configurationForConnectingSceneSession:options" },
+
+        // UISceneDelegate / UIWindowSceneDelegate
+        [2][]const u8{ "UISceneDelegate", "sceneDidBecomeActive" },
+        [2][]const u8{ "UISceneDelegate", "sceneWillResignActive" },
+        [2][]const u8{ "UISceneDelegate", "sceneWillEnterForeground" },
+        [2][]const u8{ "UISceneDelegate", "sceneDidEnterBackground" },
+        [2][]const u8{ "UIWindowSceneDelegate", "scene:willConnectToSession:options" },
+    };
+
+    try generator.addInterface("NSObject");
+
+    // Application / scene
+    try generator.addInterface("UIApplication");
+    try generator.addInterface("UIResponder");
+    try generator.addInterface("UIScene");
+    try generator.addInterface("UISceneConfiguration");
+    try generator.addInterface("UISceneSession");
+    try generator.addInterface("UIWindowScene");
+
+    // Window / view / controller
+    try generator.addInterface("UIScreen");
+    try generator.addInterface("UIWindow");
+    try generator.addInterface("UIView");
+    try generator.addInterface("UIViewController");
+
+    // Input
+    try generator.addInterface("UITouch");
+    try generator.addInterface("UIEvent");
+    try generator.addInterface("UIPress");
+    try generator.addInterface("UIPressesEvent");
+    try generator.addInterface("UIKey");
+
+    // Gesture recognizers
+    try generator.addInterface("UIGestureRecognizer");
+    try generator.addInterface("UIPinchGestureRecognizer");
+
+    // Color
+    try generator.addInterface("UIColor");
+
+    // Enums
+    try generator.addEnum("UITouchPhase");
+    try generator.addEnum("UITouchType");
+    try generator.addEnum("UIPressPhase");
+    try generator.addEnum("UIPressType");
+    try generator.addEnum("UIEventType");
+    try generator.addEnum("UIEventSubtype");
+    try generator.addEnum("UISceneActivationState");
+    try generator.addEnum("UIInterfaceOrientation");
+    try generator.addEnum("UIInterfaceOrientationMask");
+    try generator.addEnum("UIKeyboardHIDUsage");
+    try generator.addEnum("UIKeyModifierFlags");
+    try generator.addEnum("UIGestureRecognizerState");
+
+    // Protocols
+    try generator.addProtocol("UIApplicationDelegate");
+    try generator.addProtocol("UISceneDelegate");
+    try generator.addProtocol("UIWindowSceneDelegate");
+    try generator.addProtocol("NSObject");
+}
+
+const SdkKind = enum {
+    /// Use the macOS frameworks dir provided via --frameworks-dir.
+    macos,
+    /// Use the iPhoneOS frameworks dir provided via --iphoneos-frameworks-dir, plus
+    /// `-target arm64-apple-ios18.0` and the matching system include dir from
+    /// --iphoneos-include-dir.
+    iphoneos,
+};
+
 const FrameworkSpec = struct {
     name: []const u8,
     tag: Framework,
@@ -2397,6 +2635,7 @@ const FrameworkSpec = struct {
         inline_text: []const u8,
         file_path: []const u8,
     },
+    sdk: SdkKind = .macos,
     extra_clang_args: []const []const u8,
 };
 
@@ -2449,6 +2688,15 @@ const framework_specs = [_]FrameworkSpec{
         .header_content = .{ .inline_text = "\n#include <CoreVideo/CoreVideo.h>\n" },
         .extra_clang_args = &.{"-Wno-availability"},
     },
+    .{
+        .name = "UIKit",
+        .tag = .ui_kit,
+        .manual_path = "ui_kit_manual.zig",
+        .output_path = "src/ui_kit.zig",
+        .header_content = .{ .inline_text = "\n#include <UIKit/UIKit.h>\n" },
+        .sdk = .iphoneos,
+        .extra_clang_args = &.{"-Wno-availability"},
+    },
 };
 
 fn runCommand(allocator: std.mem.Allocator, io: std.Io, argv: []const []const u8) ![]u8 {
@@ -2483,7 +2731,17 @@ fn readFileContents(allocator: std.mem.Allocator, io: std.Io, path: []const u8) 
     return contents.toOwnedSlice(allocator);
 }
 
-fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: FrameworkSpec, frameworks_dir: []const u8) !void {
+const SdkDirs = struct {
+    /// macOS frameworks dir (also used as fallback if a per-sdk dir is absent).
+    macos_frameworks_dir: []const u8,
+    /// iPhoneOS frameworks dir. Required when generating a framework with `.sdk = .iphoneos`.
+    iphoneos_frameworks_dir: ?[]const u8,
+    /// iPhoneOS system include dir (e.g. SDK's `/usr/include`). Required when generating a
+    /// framework with `.sdk = .iphoneos`.
+    iphoneos_include_dir: ?[]const u8,
+};
+
+fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: FrameworkSpec, dirs: SdkDirs) !void {
     std.debug.print("Generating {s}\n", .{spec.name});
 
     // Write headers.m
@@ -2503,13 +2761,31 @@ fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: Framewor
     try argv.appendSlice(allocator, &.{
         "clang",
         tmp_header_path,
-        "-F",
-        frameworks_dir,
         "-Xclang",
         "-ast-dump=json",
         "-fsyntax-only",
         "-Wno-deprecated-declarations",
     });
+    switch (spec.sdk) {
+        .macos => try argv.appendSlice(allocator, &.{ "-F", dirs.macos_frameworks_dir }),
+        .iphoneos => {
+            const fw = dirs.iphoneos_frameworks_dir orelse {
+                std.log.err("iOS framework '{s}' requested but --iphoneos-frameworks-dir not provided", .{spec.name});
+                return error.MissingIphoneosFrameworksDir;
+            };
+            const inc = dirs.iphoneos_include_dir orelse {
+                std.log.err("iOS framework '{s}' requested but --iphoneos-include-dir not provided", .{spec.name});
+                return error.MissingIphoneosIncludeDir;
+            };
+            try argv.appendSlice(allocator, &.{
+                "-target",  "arm64-apple-ios18.0",
+                "-F",       fw,
+                "-isystem", inc,
+                // Don't let the host macOS SDK leak in.
+                "-Xclang",  "-nostdsysteminc",
+            });
+        },
+    }
     for (spec.extra_clang_args) |arg| {
         try argv.append(allocator, arg);
     }
@@ -2561,14 +2837,20 @@ fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: Framewor
         .quartz_core => try generateQuartzCore(&generator),
         .app_kit => try generateAppKit(&generator),
         .core_video => try generateCoreVideo(&generator),
+        .ui_kit => try generateUIKit(&generator),
     }
     try generator.generate();
     try file_writer.flush();
 }
 
-fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_dir: []const u8) !void {
+fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, dirs: SdkDirs) !void {
     for (framework_specs) |spec| {
-        try generateForFramework(allocator, io, spec, frameworks_dir);
+        // Skip iOS-only specs if the iOS dirs aren't available, instead of erroring out.
+        if (spec.sdk == .iphoneos and dirs.iphoneos_frameworks_dir == null) {
+            std.debug.print("Skipping {s} (no --iphoneos-frameworks-dir provided)\n", .{spec.name});
+            continue;
+        }
+        try generateForFramework(allocator, io, spec, dirs);
     }
 
     // Run zig fmt on generated files
@@ -2577,6 +2859,7 @@ fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, frameworks_di
         "src/metal.zig",     "src/avf_audio.zig",
         "src/core_midi.zig", "src/quartz_core.zig",
         "src/app_kit.zig",   "src/core_video.zig",
+        "src/ui_kit.zig",
     });
     allocator.free(fmt_stdout);
 }
@@ -2625,6 +2908,7 @@ fn generateSingleFramework(allocator: std.mem.Allocator, io: std.Io, framework: 
         .quartz_core => try generateQuartzCore(&generator),
         .app_kit => try generateAppKit(&generator),
         .core_video => try generateCoreVideo(&generator),
+        .ui_kit => try generateUIKit(&generator),
     }
     try generator.generate();
     try stdout_writer.flush();
@@ -2635,9 +2919,11 @@ fn usage() void {
         \\mach-objc-generator [options]
         \\
         \\Options:
-        \\  --framework  Metal,AVFAudio,CoreMIDI,QuartzCore,AppKit,CoreVideo  generate a single framework to stdout
-        \\  --generate-all                                         generate all frameworks
-        \\  --frameworks-dir <path>                                path to Frameworks directory (used with --generate-all)
+        \\  --framework  Metal,AVFAudio,CoreMIDI,QuartzCore,AppKit,CoreVideo,UIKit  generate a single framework to stdout
+        \\  --generate-all                                              generate all frameworks
+        \\  --frameworks-dir <path>                                     path to macOS Frameworks dir
+        \\  --iphoneos-frameworks-dir <path>                            path to iPhoneOS Frameworks dir (required for UIKit)
+        \\  --iphoneos-include-dir <path>                               path to iPhoneOS usr/include dir (required for UIKit)
         \\  --help
         \\
     , .{});
@@ -2650,6 +2936,7 @@ const Framework = enum {
     quartz_core,
     app_kit,
     core_video,
+    ui_kit,
 };
 
 pub fn main(init: std.process.Init) anyerror!void {
@@ -2663,6 +2950,8 @@ pub fn main(init: std.process.Init) anyerror!void {
     var framework: ?Framework = null;
     var generate_all = false;
     var frameworks_dir: []const u8 = "./xcode-frameworks/Frameworks";
+    var iphoneos_frameworks_dir: ?[]const u8 = null;
+    var iphoneos_include_dir: ?[]const u8 = null;
 
     while (args_iter.next()) |arg| {
         if (std.mem.eql(u8, arg, "--framework")) {
@@ -2677,6 +2966,7 @@ pub fn main(init: std.process.Init) anyerror!void {
                 if (std.mem.eql(u8, fw_arg, "QuartzCore")) break :blk .quartz_core;
                 if (std.mem.eql(u8, fw_arg, "AppKit")) break :blk .app_kit;
                 if (std.mem.eql(u8, fw_arg, "CoreVideo")) break :blk .core_video;
+                if (std.mem.eql(u8, fw_arg, "UIKit")) break :blk .ui_kit;
                 usage();
                 std.process.exit(1);
             };
@@ -2687,11 +2977,27 @@ pub fn main(init: std.process.Init) anyerror!void {
                 usage();
                 std.process.exit(1);
             };
+        } else if (std.mem.eql(u8, arg, "--iphoneos-frameworks-dir")) {
+            iphoneos_frameworks_dir = args_iter.next() orelse {
+                usage();
+                std.process.exit(1);
+            };
+        } else if (std.mem.eql(u8, arg, "--iphoneos-include-dir")) {
+            iphoneos_include_dir = args_iter.next() orelse {
+                usage();
+                std.process.exit(1);
+            };
         }
     }
 
+    const dirs: SdkDirs = .{
+        .macos_frameworks_dir = frameworks_dir,
+        .iphoneos_frameworks_dir = iphoneos_frameworks_dir,
+        .iphoneos_include_dir = iphoneos_include_dir,
+    };
+
     if (generate_all) {
-        try generateAllFrameworks(allocator, io, frameworks_dir);
+        try generateAllFrameworks(allocator, io, dirs);
     } else if (framework) |fw| {
         try generateSingleFramework(allocator, io, fw);
     } else {

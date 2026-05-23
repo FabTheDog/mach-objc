@@ -11,21 +11,17 @@ pub fn build(b: *std.Build) void {
     });
     module.linkSystemLibrary("objc", .{});
 
-    // TODO: Maybe split this out into a separate module so we only link these in when needed.
     if (target.result.os.tag == .macos) {
         module.linkFramework("AppKit", .{});
         module.linkFramework("CoreVideo", .{});
         module.linkFramework("QuartzCore", .{});
-    } else {
+    } else if (target.result.os.tag == .ios) {
         module.linkFramework("UIKit", .{});
-        // TODO: Add iOS asm files once they are generated.
+        module.linkFramework("QuartzCore", .{});
+        module.linkFramework("Foundation", .{});
     }
 
-    if (b.lazyDependency("xcode_frameworks", .{})) |dep| {
-        module.addSystemFrameworkPath(dep.path("Frameworks"));
-        module.addSystemIncludePath(dep.path("include"));
-        module.addLibraryPath(dep.path("lib"));
-    }
+    addXcodeFrameworks(b, module, target, optimize);
 
     const unit_tests = b.addTest(.{
         .root_module = b.createModule(.{
@@ -42,14 +38,16 @@ pub fn build(b: *std.Build) void {
         unit_tests.root_module.linkFramework("QuartzCore", .{});
         unit_tests.root_module.linkFramework("AVFAudio", .{});
         unit_tests.root_module.linkFramework("CoreMIDI", .{});
-    } else {
+    } else if (target.result.os.tag == .ios) {
         unit_tests.root_module.linkFramework("UIKit", .{});
+        unit_tests.root_module.linkFramework("Metal", .{});
+        unit_tests.root_module.linkFramework("QuartzCore", .{});
+        unit_tests.root_module.linkFramework("AVFAudio", .{});
+        unit_tests.root_module.linkFramework("CoreMIDI", .{});
+        unit_tests.root_module.linkFramework("Foundation", .{});
+        unit_tests.root_module.linkFramework("CoreGraphics", .{});
     }
-    if (b.lazyDependency("xcode_frameworks", .{})) |dep| {
-        unit_tests.root_module.addSystemFrameworkPath(dep.path("Frameworks"));
-        unit_tests.root_module.addSystemIncludePath(dep.path("include"));
-        unit_tests.root_module.addLibraryPath(dep.path("lib"));
-    }
+    addXcodeFrameworks(b, unit_tests.root_module, target, optimize);
 
     const run_unit_tests = b.addRunArtifact(unit_tests);
     const test_step = b.step("test", "Run unit tests");
@@ -70,8 +68,40 @@ pub fn build(b: *std.Build) void {
     if (b.lazyDependency("xcode_frameworks", .{})) |dep| {
         gen_run.addArg("--frameworks-dir");
         gen_run.addDirectoryArg(dep.path("Frameworks"));
+        gen_run.addArg("--iphoneos-frameworks-dir");
+        gen_run.addDirectoryArg(dep.path("iphoneos/Frameworks"));
+        gen_run.addArg("--iphoneos-include-dir");
+        gen_run.addDirectoryArg(dep.path("iphoneos/include"));
     }
 
     const generate_step = b.step("generate", "Generate files");
     generate_step.dependOn(&gen_run.step);
+}
+
+/// Adds system framework / include / library paths from the bundled `xcode_frameworks` package,
+/// picking the right subtree based on `target` (macOS vs iOS device vs iOS simulator).
+fn addXcodeFrameworks(
+    b: *std.Build,
+    module: *std.Build.Module,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) void {
+    _ = optimize;
+    const dep = b.lazyDependency("xcode_frameworks", .{}) orelse return;
+
+    const subdir: ?[]const u8 = switch (target.result.os.tag) {
+        .macos => null,
+        .ios => if (target.result.abi == .simulator) "iphonesimulator" else "iphoneos",
+        else => null,
+    };
+
+    if (subdir) |sd| {
+        module.addSystemFrameworkPath(dep.path(b.fmt("{s}/Frameworks", .{sd})));
+        module.addSystemIncludePath(dep.path(b.fmt("{s}/include", .{sd})));
+        module.addLibraryPath(dep.path(b.fmt("{s}/lib", .{sd})));
+    } else {
+        module.addSystemFrameworkPath(dep.path("Frameworks"));
+        module.addSystemIncludePath(dep.path("include"));
+        module.addLibraryPath(dep.path("lib"));
+    }
 }

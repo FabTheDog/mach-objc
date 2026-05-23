@@ -201,6 +201,30 @@ pub fn Array(comptime ObjectType: type) type {
     };
 }
 
+/// Generic NSSet binding. Minimal set of methods; extend as needed.
+pub fn Set(comptime ObjectType: type) type {
+    return opaque {
+        pub const InternalInfo = objc.ExternClass("NSSet", @This(), ObjectInterface, &.{Copying});
+        pub const as = InternalInfo.as;
+        pub const retain = InternalInfo.retain;
+        pub const release = InternalInfo.release;
+        pub const autorelease = InternalInfo.autorelease;
+        pub const new = InternalInfo.new;
+        pub const alloc = InternalInfo.alloc;
+        pub const allocInit = InternalInfo.allocInit;
+
+        pub fn count(self_: *@This()) UInteger {
+            return objc.msgSend(self_, "count", UInteger, .{});
+        }
+        pub fn anyObject(self_: *@This()) ?*ObjectType {
+            return objc.msgSend(self_, "anyObject", ?*ObjectType, .{});
+        }
+        pub fn allObjects(self_: *@This()) *Array(ObjectType) {
+            return objc.msgSend(self_, "allObjects", *Array(ObjectType), .{});
+        }
+    };
+}
+
 pub const Bundle = opaque {
     pub const InternalInfo = objc.ExternClass("NSBundle", @This(), ObjectInterface, &.{});
     pub const as = InternalInfo.as;

@@ -319,7 +319,7 @@ const SEC_OBJC_IMAGEINFO = "__DATA,__objc_imageinfo,regular,no_dead_strip";
 /// Selector. A distinct opaque type we can distinguish when auto-deriving Obj-C type encodings from
 /// Zig function signatures.
 pub const SEL = ?*Selector;
-const Selector = opaque {};
+pub const Selector = opaque {};
 
 const IMP = *const fn () callconv(.c) void;
 
