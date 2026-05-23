@@ -85,7 +85,7 @@ pub fn superFn(
     const fn_info = @typeInfo(Fn).@"fn";
     const Ret = fn_info.return_type.?;
 
-    // Build the IMP type: fn(self, _cmd: SEL, args...) callconv(.c) Ret.
+    // Build the IMP type: fn(self, _cmd: ?*Selector, args...) callconv(.c) Ret.
     const ImpFn = comptime init: {
         const Attrs = std.builtin.Type.Fn.Param.Attributes;
         var param_types: []const type = &.{ fn_info.params[0].type.?, ?*anyopaque };
@@ -316,9 +316,8 @@ const SEC_OBJC_IVAR = "__DATA,__objc_ivar";
 const SEC_OBJC_CLASSLIST = "__DATA,__objc_classlist,regular,no_dead_strip";
 const SEC_OBJC_IMAGEINFO = "__DATA,__objc_imageinfo,regular,no_dead_strip";
 
-/// Selector. A distinct opaque type we can distinguish when auto-deriving Obj-C type encodings from
-/// Zig function signatures.
-pub const SEL = ?*Selector;
+/// Obj-C selector. Opaque struct exposed by pointer (`?*Selector` for nullable, `*Selector` for
+/// non-null)
 pub const Selector = opaque {};
 
 const IMP = *const fn () callconv(.c) void;
@@ -326,7 +325,7 @@ const IMP = *const fn () callconv(.c) void;
 /// ObjC class method extern representation
 const MethodT = extern struct {
     /// Initialised to a pointer to the methname C-string. The runtime rewrites this slot in place
-    /// with the canonical `SEL` during class realisation.
+    /// with the canonical selector during class realisation.
     name: ?*const anyopaque,
     types: [*:0]const u8,
     imp: IMP,
@@ -718,7 +717,7 @@ fn ivarsFromStruct(comptime S: type) []const Ivar {
 }
 
 /// Wrap a user-written method (signature `fn(self, args...) Ret`) into a trampoline whose signature
-/// matches the Obj-C IMP ABI `fn(self, _cmd: SEL, args...) callconv(.c) Ret`, so they don't need to
+/// matches the Obj-C IMP ABI `fn(self, _cmd: ?*Selector, args...) callconv(.c) Ret`, so they don't need to
 /// write the _cmd slot into their signature.
 fn Trampoline(comptime user_fn: anytype) type {
     const UserFn = @typeInfo(@TypeOf(user_fn)).pointer.child;
@@ -728,14 +727,14 @@ fn Trampoline(comptime user_fn: anytype) type {
     return switch (info.params.len) {
         1 => struct {
             const A0 = info.params[0].type.?;
-            pub fn impl(a0: A0, _: SEL) callconv(.c) Ret {
+            pub fn impl(a0: A0, _: ?*Selector) callconv(.c) Ret {
                 return user_fn(a0);
             }
         },
         2 => struct {
             const A0 = info.params[0].type.?;
             const A1 = info.params[1].type.?;
-            pub fn impl(a0: A0, _: SEL, a1: A1) callconv(.c) Ret {
+            pub fn impl(a0: A0, _: ?*Selector, a1: A1) callconv(.c) Ret {
                 return user_fn(a0, a1);
             }
         },
@@ -743,7 +742,7 @@ fn Trampoline(comptime user_fn: anytype) type {
             const A0 = info.params[0].type.?;
             const A1 = info.params[1].type.?;
             const A2 = info.params[2].type.?;
-            pub fn impl(a0: A0, _: SEL, a1: A1, a2: A2) callconv(.c) Ret {
+            pub fn impl(a0: A0, _: ?*Selector, a1: A1, a2: A2) callconv(.c) Ret {
                 return user_fn(a0, a1, a2);
             }
         },
@@ -752,7 +751,7 @@ fn Trampoline(comptime user_fn: anytype) type {
             const A1 = info.params[1].type.?;
             const A2 = info.params[2].type.?;
             const A3 = info.params[3].type.?;
-            pub fn impl(a0: A0, _: SEL, a1: A1, a2: A2, a3: A3) callconv(.c) Ret {
+            pub fn impl(a0: A0, _: ?*Selector, a1: A1, a2: A2, a3: A3) callconv(.c) Ret {
                 return user_fn(a0, a1, a2, a3);
             }
         },
@@ -762,7 +761,7 @@ fn Trampoline(comptime user_fn: anytype) type {
             const A2 = info.params[2].type.?;
             const A3 = info.params[3].type.?;
             const A4 = info.params[4].type.?;
-            pub fn impl(a0: A0, _: SEL, a1: A1, a2: A2, a3: A3, a4: A4) callconv(.c) Ret {
+            pub fn impl(a0: A0, _: ?*Selector, a1: A1, a2: A2, a3: A3, a4: A4) callconv(.c) Ret {
                 return user_fn(a0, a1, a2, a3, a4);
             }
         },
@@ -795,7 +794,7 @@ fn encodeOne(comptime T: type) []const u8 {
         i64, isize => "q",
         f32 => "f",
         f64 => "d",
-        SEL => ":",
+        ?*Selector => ":",
         else => switch (@typeInfo(T)) {
             // All pointers/optionals are encoded as `id` for simplicity. The runtime doesn't
             // validate this, and it's how clang emits type encodings for plain `id` arguments
@@ -831,7 +830,7 @@ fn encodeOne(comptime T: type) []const u8 {
 /// Offsets are the cumulative byte size of preceding arguments — i.e. the slot offsets in the C
 /// calling convention's logical argument area.
 ///
-/// On LP64 (which we require) every pointer (id, SEL, *anyopaque) is 8 bytes, so the arithmetic is
+/// On LP64 (which we require) every pointer (id, selector, *anyopaque) is 8 bytes, so the arithmetic is
 /// straightforward.
 fn typeEncoding(comptime Fn: type) [:0]const u8 {
     @setEvalBranchQuota(100_000);
