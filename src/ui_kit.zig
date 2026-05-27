@@ -825,7 +825,7 @@ pub const UIColor = opaque {
 };
 
 pub const UIApplicationDelegate = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{ ObjectProtocol, ObjectProtocol });
+    pub const InternalInfo = objc.ExternProtocol("UIApplicationDelegate", @This(), &.{ ObjectProtocol, ObjectProtocol });
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -840,7 +840,7 @@ pub const UIApplicationDelegate = opaque {
 };
 
 pub const UISceneDelegate = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{ ObjectProtocol, ObjectProtocol });
+    pub const InternalInfo = objc.ExternProtocol("UISceneDelegate", @This(), &.{ ObjectProtocol, ObjectProtocol });
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -861,7 +861,7 @@ pub const UISceneDelegate = opaque {
 };
 
 pub const UIWindowSceneDelegateProtocol = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{UISceneDelegate});
+    pub const InternalInfo = objc.ExternProtocol("UIWindowSceneDelegate", @This(), &.{UISceneDelegate});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -869,7 +869,7 @@ pub const UIWindowSceneDelegateProtocol = opaque {
 };
 
 pub const ObjectProtocol = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("NSObject", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;

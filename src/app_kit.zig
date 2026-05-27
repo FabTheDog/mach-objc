@@ -637,7 +637,7 @@ pub const TrackingArea = opaque {
 };
 
 pub const ApplicationDelegate = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{ ObjectProtocol, ObjectProtocol });
+    pub const InternalInfo = objc.ExternProtocol("NSApplicationDelegate", @This(), &.{ ObjectProtocol, ObjectProtocol });
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -649,7 +649,7 @@ pub const ApplicationDelegate = opaque {
 };
 
 pub const WindowDelegate = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{ ObjectProtocol, ObjectProtocol });
+    pub const InternalInfo = objc.ExternProtocol("NSWindowDelegate", @This(), &.{ ObjectProtocol, ObjectProtocol });
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -661,7 +661,7 @@ pub const WindowDelegate = opaque {
 };
 
 pub const ObjectProtocol = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("NSObject", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;

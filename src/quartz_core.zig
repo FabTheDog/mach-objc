@@ -99,7 +99,7 @@ pub const MetalLayer = opaque {
 };
 
 pub const MetalDrawable = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("CAMetalDrawable", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -207,7 +207,7 @@ pub const MetalDisplayLinkUpdate = opaque {
 };
 
 pub const MetalDisplayLinkDelegate = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("CAMetalDisplayLinkDelegate", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;

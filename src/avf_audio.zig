@@ -402,7 +402,7 @@ pub const AVAudioSessionChannelDescription = opaque {
 };
 
 pub const AVAudioSessionDelegate = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("AVAudioSessionDelegate", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;

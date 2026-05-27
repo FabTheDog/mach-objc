@@ -337,7 +337,7 @@ pub const Bundle = opaque {
 };
 
 pub const Copying = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{ObjectProtocol});
+    pub const InternalInfo = objc.ExternProtocol("NSCopying", @This(), &.{ObjectProtocol});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -644,7 +644,7 @@ pub const Number = opaque {
 };
 
 pub const ObjectProtocol = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("NSObject", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;

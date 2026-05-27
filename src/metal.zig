@@ -1631,7 +1631,7 @@ pub const InstanceAccelerationStructureDescriptor = opaque {
 };
 
 pub const AccelerationStructure = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Resource});
+    pub const InternalInfo = objc.ExternProtocol("MTLAccelerationStructure", @This(), &.{Resource});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -1646,7 +1646,7 @@ pub const AccelerationStructure = opaque {
 };
 
 pub const AccelerationStructureCommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{CommandEncoder});
+    pub const InternalInfo = objc.ExternProtocol("MTLAccelerationStructureCommandEncoder", @This(), &.{CommandEncoder});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -1985,7 +1985,7 @@ pub const Argument = opaque {
 };
 
 pub const Binding = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLBinding", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2012,7 +2012,7 @@ pub const Binding = opaque {
 };
 
 pub const BufferBinding = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Binding});
+    pub const InternalInfo = objc.ExternProtocol("MTLBufferBinding", @This(), &.{Binding});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2036,7 +2036,7 @@ pub const BufferBinding = opaque {
 };
 
 pub const ThreadgroupBinding = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Binding});
+    pub const InternalInfo = objc.ExternProtocol("MTLThreadgroupBinding", @This(), &.{Binding});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2051,7 +2051,7 @@ pub const ThreadgroupBinding = opaque {
 };
 
 pub const TextureBinding = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Binding});
+    pub const InternalInfo = objc.ExternProtocol("MTLTextureBinding", @This(), &.{Binding});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2072,7 +2072,7 @@ pub const TextureBinding = opaque {
 };
 
 pub const ObjectPayloadBinding = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Binding});
+    pub const InternalInfo = objc.ExternProtocol("MTLObjectPayloadBinding", @This(), &.{Binding});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2087,7 +2087,7 @@ pub const ObjectPayloadBinding = opaque {
 };
 
 pub const ArgumentEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLArgumentEncoder", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2192,7 +2192,7 @@ pub const BinaryArchiveDescriptor = opaque {
 };
 
 pub const BinaryArchive = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLBinaryArchive", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2225,7 +2225,7 @@ pub const BinaryArchive = opaque {
 };
 
 pub const BlitCommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{CommandEncoder});
+    pub const InternalInfo = objc.ExternProtocol("MTLBlitCommandEncoder", @This(), &.{CommandEncoder});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2375,7 +2375,7 @@ pub const BlitPassDescriptor = opaque {
 };
 
 pub const Buffer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Resource});
+    pub const InternalInfo = objc.ExternProtocol("MTLBuffer", @This(), &.{Resource});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2489,7 +2489,7 @@ pub const CaptureManager = opaque {
 };
 
 pub const CaptureScope = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCaptureScope", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2540,7 +2540,7 @@ pub const CommandBufferDescriptor = opaque {
 };
 
 pub const CommandBufferEncoderInfo = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCommandBufferEncoderInfo", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2558,7 +2558,7 @@ pub const CommandBufferEncoderInfo = opaque {
 };
 
 pub const CommandBuffer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCommandBuffer", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2678,7 +2678,7 @@ pub const CommandBuffer = opaque {
 };
 
 pub const CommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCommandEncoder", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2708,7 +2708,7 @@ pub const CommandEncoder = opaque {
 };
 
 pub const CommandQueue = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCommandQueue", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -2738,7 +2738,7 @@ pub const CommandQueue = opaque {
 };
 
 pub const ComputeCommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{CommandEncoder});
+    pub const InternalInfo = objc.ExternProtocol("MTLComputeCommandEncoder", @This(), &.{CommandEncoder});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3044,7 +3044,7 @@ pub const ComputePipelineDescriptor = opaque {
 };
 
 pub const ComputePipelineState = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLComputePipelineState", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3089,7 +3089,7 @@ pub const ComputePipelineState = opaque {
 };
 
 pub const Counter = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCounter", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3101,7 +3101,7 @@ pub const Counter = opaque {
 };
 
 pub const CounterSet = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCounterSet", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3152,7 +3152,7 @@ pub const CounterSampleBufferDescriptor = opaque {
 };
 
 pub const CounterSampleBuffer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLCounterSampleBuffer", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3263,7 +3263,7 @@ pub const DepthStencilDescriptor = opaque {
 };
 
 pub const DepthStencilState = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLDepthStencilState", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3344,7 +3344,7 @@ pub const ArgumentDescriptor = opaque {
 };
 
 pub const Device = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLDevice", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3704,7 +3704,7 @@ pub const Device = opaque {
 };
 
 pub const Drawable = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLDrawable", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3731,7 +3731,7 @@ pub const Drawable = opaque {
 };
 
 pub const DynamicLibrary = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLDynamicLibrary", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3755,7 +3755,7 @@ pub const DynamicLibrary = opaque {
 };
 
 pub const Event = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLEvent", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3791,7 +3791,7 @@ pub const SharedEventListener = opaque {
 };
 
 pub const SharedEvent = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Event});
+    pub const InternalInfo = objc.ExternProtocol("MTLSharedEvent", @This(), &.{Event});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3827,7 +3827,7 @@ pub const SharedEventHandle = opaque {
 };
 
 pub const Fence = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFence", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3925,7 +3925,7 @@ pub const IntersectionFunctionDescriptor = opaque {
 };
 
 pub const FunctionHandle = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFunctionHandle", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3943,7 +3943,7 @@ pub const FunctionHandle = opaque {
 };
 
 pub const LogContainer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLLogContainer", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3951,7 +3951,7 @@ pub const LogContainer = opaque {
 };
 
 pub const FunctionLogDebugLocation = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFunctionLogDebugLocation", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3972,7 +3972,7 @@ pub const FunctionLogDebugLocation = opaque {
 };
 
 pub const FunctionLog = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFunctionLog", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -3993,7 +3993,7 @@ pub const FunctionLog = opaque {
 };
 
 pub const FunctionStitchingAttribute = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFunctionStitchingAttribute", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4012,7 +4012,7 @@ pub const FunctionStitchingAttributeAlwaysInline = opaque {
 };
 
 pub const FunctionStitchingNode = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFunctionStitchingNode", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4191,7 +4191,7 @@ pub const HeapDescriptor = opaque {
 };
 
 pub const Heap = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLHeap", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4347,7 +4347,7 @@ pub const IndirectCommandBufferDescriptor = opaque {
 };
 
 pub const IndirectCommandBuffer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Resource});
+    pub const InternalInfo = objc.ExternProtocol("MTLIndirectCommandBuffer", @This(), &.{Resource});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4371,7 +4371,7 @@ pub const IndirectCommandBuffer = opaque {
 };
 
 pub const IndirectRenderCommand = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIndirectRenderCommand", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4428,7 +4428,7 @@ pub const IndirectRenderCommand = opaque {
 };
 
 pub const IndirectComputeCommand = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIndirectComputeCommand", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4491,7 +4491,7 @@ pub const IntersectionFunctionTableDescriptor = opaque {
 };
 
 pub const IntersectionFunctionTable = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Resource});
+    pub const InternalInfo = objc.ExternProtocol("MTLIntersectionFunctionTable", @This(), &.{Resource});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4533,7 +4533,7 @@ pub const IntersectionFunctionTable = opaque {
 };
 
 pub const IOCommandBuffer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIOCommandBuffer", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4596,7 +4596,7 @@ pub const IOCommandBuffer = opaque {
 };
 
 pub const IOCommandQueue = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIOCommandQueue", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4620,7 +4620,7 @@ pub const IOCommandQueue = opaque {
 };
 
 pub const IOScratchBuffer = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIOScratchBuffer", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4632,7 +4632,7 @@ pub const IOScratchBuffer = opaque {
 };
 
 pub const IOScratchBufferAllocator = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIOScratchBufferAllocator", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4686,7 +4686,7 @@ pub const IOCommandQueueDescriptor = opaque {
 };
 
 pub const IOFileHandle = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLIOFileHandle", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4785,7 +4785,7 @@ pub const FunctionConstant = opaque {
 };
 
 pub const Function = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLFunction", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4911,7 +4911,7 @@ pub const CompileOptions = opaque {
 };
 
 pub const Library = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLLibrary", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -4998,7 +4998,7 @@ pub const LinkedFunctions = opaque {
 };
 
 pub const ParallelRenderCommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{CommandEncoder});
+    pub const InternalInfo = objc.ExternProtocol("MTLParallelRenderCommandEncoder", @This(), &.{CommandEncoder});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -5184,7 +5184,7 @@ pub const RasterizationRateMapDescriptor = opaque {
 };
 
 pub const RasterizationRateMap = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLRasterizationRateMap", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -5223,7 +5223,7 @@ pub const RasterizationRateMap = opaque {
 };
 
 pub const RenderCommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{CommandEncoder});
+    pub const InternalInfo = objc.ExternProtocol("MTLRenderCommandEncoder", @This(), &.{CommandEncoder});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -6276,7 +6276,7 @@ pub const RenderPipelineFunctionsDescriptor = opaque {
 };
 
 pub const RenderPipelineState = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLRenderPipelineState", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -6624,7 +6624,7 @@ pub const MeshRenderPipelineDescriptor = opaque {
 };
 
 pub const Resource = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLResource", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -6672,7 +6672,7 @@ pub const Resource = opaque {
 };
 
 pub const ResourceStateCommandEncoder = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{CommandEncoder});
+    pub const InternalInfo = objc.ExternProtocol("MTLResourceStateCommandEncoder", @This(), &.{CommandEncoder});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -6867,7 +6867,7 @@ pub const SamplerDescriptor = opaque {
 };
 
 pub const SamplerState = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{});
+    pub const InternalInfo = objc.ExternProtocol("MTLSamplerState", @This(), &.{});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -7152,7 +7152,7 @@ pub const TextureDescriptor = opaque {
 };
 
 pub const Texture = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Resource});
+    pub const InternalInfo = objc.ExternProtocol("MTLTexture", @This(), &.{Resource});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
@@ -7413,7 +7413,7 @@ pub const VisibleFunctionTableDescriptor = opaque {
 };
 
 pub const VisibleFunctionTable = opaque {
-    pub const InternalInfo = objc.ExternProtocol(@This(), &.{Resource});
+    pub const InternalInfo = objc.ExternProtocol("MTLVisibleFunctionTable", @This(), &.{Resource});
     pub const as = InternalInfo.as;
     pub const retain = InternalInfo.retain;
     pub const release = InternalInfo.release;
