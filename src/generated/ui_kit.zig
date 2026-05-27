@@ -1,9 +1,9 @@
 const std = @import("std");
 const ca = @import("quartz_core.zig");
-const cf = @import("core_foundation.zig");
-const ns = @import("foundation.zig");
-const cg = @import("core_graphics.zig");
-const objc = @import("objc.zig");
+const cf = @import("../core_foundation.zig");
+const ns = @import("../foundation.zig");
+const cg = @import("../core_graphics.zig");
+const objc = @import("../objc.zig");
 
 pub const applicationMain = UIApplicationMain;
 extern fn UIApplicationMain(
