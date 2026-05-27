@@ -150,6 +150,13 @@ pub fn superFn(
 ///
 /// Be careful. The return type and argument types *must* match the Objective-C method's signature.
 /// No compile-time verification is performed.
+///
+/// On macOS we use the clang-style `objc_msgSend$<selector>` dispatch-stub mechanism (cheaper at
+/// call sites, populated via the `__objc_stubs` section). On iOS that mechanism currently relies on
+/// Zig's linker fixing up entries in `__objc_selrefs` so dyld can rebind them to canonical SELs,
+/// which is broken: the runtime sees our local methname pointer rather than the shared-cache SEL
+/// and rejects every send. We fall back to the classic `sel_registerName` + plain `objc_msgSend`
+/// path on iOS, caching the canonical SEL per call site so the lookup happens at most once.
 pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: type, args: anytype) return_type {
     const n_colons = comptime std.mem.count(u8, selector, ":");
     if (comptime n_colons != args.len) {
@@ -164,9 +171,15 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
     // `class_getClassMethod()`, then call `method_getTypeEncoding()`, and then parse the string and
     // validate it against `receiver` and `args`.
 
+    const use_stubs = comptime builtin.target.os.tag == .macos;
+    const SecondParam = if (use_stubs) [*:0]c_char else ?*Selector;
+
     const Fn = comptime init: {
-        var param_types: []const type = &.{ @TypeOf(receiver), [*:0]c_char };
-        var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{ std.builtin.Type.Fn.Param.Attributes{}, std.builtin.Type.Fn.Param.Attributes{} };
+        var param_types: []const type = &.{ @TypeOf(receiver), SecondParam };
+        var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{
+            std.builtin.Type.Fn.Param.Attributes{},
+            std.builtin.Type.Fn.Param.Attributes{},
+        };
         for (@typeInfo(@TypeOf(args)).@"struct".fields) |field| {
             param_types = param_types ++ .{field.type};
             param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
@@ -182,8 +195,23 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
     const needs_fpret = comptime builtin.target.cpu.arch == .x86 and (return_type == f32 or return_type == f64);
     const needs_stret = comptime builtin.target.cpu.arch == .x86 and @sizeOf(return_type) > 16;
     const msg_send_fn_name = comptime if (needs_stret) "objc_msgSend_stret" else if (needs_fpret) "objc_msgSend_fpret" else "objc_msgSend";
-    const msg_send_fn = @extern(*const Fn, .{ .name = msg_send_fn_name ++ "$" ++ selector });
-    return @call(.auto, msg_send_fn, .{ receiver, undefined } ++ args);
+
+    if (use_stubs) {
+        const msg_send_fn = @extern(*const Fn, .{ .name = msg_send_fn_name ++ "$" ++ selector });
+        return @call(.auto, msg_send_fn, .{ receiver, undefined } ++ args);
+    } else {
+        // Resolve the selector via the runtime once per call site; cache the result so subsequent
+        // calls are a single load.
+        const SelCache = struct {
+            var sel: ?*Selector = null;
+            fn get() ?*Selector {
+                if (sel == null) sel = @ptrCast(sel_registerName(selector ++ "\x00"));
+                return sel;
+            }
+        };
+        const msg_send_fn = @extern(*const Fn, .{ .name = msg_send_fn_name });
+        return @call(.auto, msg_send_fn, .{ receiver, SelCache.get() } ++ args);
+    }
 }
 
 pub fn ExternClass(comptime name: []const u8, T: type, Super: type, comptime protocols: []const type) type {
@@ -271,8 +299,40 @@ pub fn ExternClass(comptime name: []const u8, T: type, Super: type, comptime pro
     };
 }
 
-pub fn ExternProtocol(T: type, comptime super_protocols: []const type) type {
+/// Opaque handle for an Obj-C `Protocol` runtime object.
+///
+/// We can't get this via `@extern` to `_OBJC_PROTOCOL_$_<name>` like we do for classes: Apple's
+/// iOS / macOS framework tbd stubs don't expose those symbols at link time (they only export
+/// `_OBJC_CLASS_$_<name>` and method functions). The protocol object exists only inside the running
+/// process. To get at it, callers go through `objc_getProtocol` at startup.
+pub const Protocol = opaque {};
+
+extern "objc" fn objc_getProtocol(name: [*:0]const u8) ?*Protocol;
+extern "objc" fn class_addProtocol(cls: ?*Class, protocol: ?*Protocol) bool;
+extern "objc" fn objc_getClass(name: [*:0]const u8) ?*Class;
+
+/// Declare a Zig wrapper for an existing Obj-C `@protocol(...)`.
+///
+/// `runtime_name` is the protocol's true Obj-C name (e.g. `"UIApplicationDelegate"`,
+/// `"NSWindowDelegate"`). It's used by `DefineClass` to register class-side conformance
+/// at startup via `class_addProtocol`, the runtime counterpart of clang's class_ro
+/// `base_protocols` slot. We resolve the protocol object at runtime rather than at link
+/// time because iOS framework tbd stubs don't export the `_OBJC_PROTOCOL_$_<name>`
+/// symbol.
+pub fn ExternProtocol(comptime runtime_name: []const u8, T: type, comptime super_protocols: []const type) type {
     return struct {
+        /// The protocol's runtime name, e.g. `"UIApplicationDelegate"`. Used by `DefineClass`'s
+        /// startup constructor to look up the runtime `Protocol *`.
+        pub const protocol_name = runtime_name;
+
+        /// Look up the runtime `Protocol *` for this protocol. The framework that owns the protocol
+        /// (`UIKit`, `AppKit`, etc.) must be loaded by dyld before this is called; in practice,
+        /// that's anywhere after `__attribute__((constructor))` time on a process that links the
+        /// framework.
+        pub fn protocol() ?*Protocol {
+            return objc_getProtocol(runtime_name ++ "\x00");
+        }
+
         pub fn canCastTo(comptime Base: type) bool {
             if (Base == T) return true;
             inline for (super_protocols) |P| {
@@ -315,6 +375,7 @@ const SEC_OBJC_DATA = "__DATA,__objc_data";
 const SEC_OBJC_IVAR = "__DATA,__objc_ivar";
 const SEC_OBJC_CLASSLIST = "__DATA,__objc_classlist,regular,no_dead_strip";
 const SEC_OBJC_IMAGEINFO = "__DATA,__objc_imageinfo,regular,no_dead_strip";
+const SEC_MOD_INIT_FUNC = "__DATA,__mod_init_func,mod_init_funcs";
 
 /// Obj-C selector. Opaque struct exposed by pointer (`?*Selector` for nullable, `*Selector` for
 /// non-null)
@@ -955,6 +1016,7 @@ pub fn DefineClass(comptime Spec: type) type {
     const name = Spec.class_name;
     const superclass = Spec.superclass;
     const arc: bool = if (@hasDecl(Spec, "arc")) Spec.arc else true;
+    const protocols: []const type = if (@hasDecl(Spec, "protocols")) Spec.protocols else &.{};
 
     const ivars: []const Ivar = if (@hasDecl(Spec, "implementation"))
         comptime ivarsFromStruct(Spec.implementation.Layout)
@@ -1106,6 +1168,9 @@ pub fn DefineClass(comptime Spec: type) type {
             .ivar_layout = ivar_layout_ptr,
             .name = class_name_str,
             .base_method_list = if (methods.len > 0) &method_list_const else null,
+            // Protocol conformance is registered at startup by the `mod_init` constructor below
+            // rather than via this static field, because iOS framework tbd stubs don't export
+            // `_OBJC_PROTOCOL_$_<name>` so we can't get the protocol pointers at link time.
             .base_protocols = null,
             .ivars = if (ivars.len > 0) &ivar_list_const else null,
             .weak_ivar_layout = null,
@@ -1135,6 +1200,27 @@ pub fn DefineClass(comptime Spec: type) type {
             .version = 0,
             .flags = OBJC_IMAGE_HAS_CATEGORY_CLASS_PROPERTIES,
         };
+
+        /// Module initializer that wires up `Spec.protocols` at process startup. Dyld runs every
+        /// pointer in `__DATA,__mod_init_func` once the image (and everything it links against) is
+        /// loaded; that's before `main()` and well before `UIApplicationMain` queries
+        /// `class_conformsToProtocol`. We have to do it here rather than via the static
+        /// `class_ro.base_protocols` slot because Apple's iOS / macOS framework tbd stubs don't
+        /// expose `_OBJC_PROTOCOL_$_<name>` at link time — `objc_getProtocol` is the only way to
+        /// obtain the protocol object.
+        fn modInit() callconv(.c) void {
+            if (protocols.len == 0) return;
+            // Resolve the class through the runtime rather than dereferencing the static
+            // `_OBJC_CLASS_$_<name>` symbol directly: `class_addProtocol` reaches into the realized
+            // `class_rw_t`, which is only set up the first time the runtime looks the class up.
+            const cls = objc_getClass(name ++ "\x00");
+            inline for (protocols) |P| {
+                if (P.InternalInfo.protocol()) |p| {
+                    _ = class_addProtocol(cls, p);
+                }
+            }
+        }
+        const mod_init_ptr: *const fn () callconv(.c) void linksection(SEC_MOD_INIT_FUNC) = &modInit;
     };
 
     // Linker-visible Mach-O exports. We match clang naming here.
@@ -1178,9 +1264,33 @@ pub fn DefineClass(comptime Spec: type) type {
         });
     }
 
-    // Force the classlist + image_info entries to be linked.
-    _ = &Mod.classlist_entry;
-    _ = &Mod.image_info;
+    // Force the classlist + image_info entries to be linked into the final binary by @exporting
+    // them, so that `NSClassFromString("Foo")` can find our class.
+    // The exported names are arbitrary but must be unique per class to avoid linker collisions; we
+    // hide their visibility because nothing outside the image needs them.
+    @export(&Mod.classlist_entry, .{
+        .name = "\x01l_OBJC_LABEL_CLASS_$_" ++ name,
+        .linkage = .strong,
+        .visibility = .hidden,
+        .section = SEC_OBJC_CLASSLIST,
+    });
+    @export(&Mod.image_info, .{
+        .name = "\x01l_OBJC_IMAGE_INFO_" ++ name,
+        .linkage = .strong,
+        .visibility = .hidden,
+        .section = SEC_OBJC_IMAGEINFO,
+    });
+    if (protocols.len > 0) {
+        // The per-class mod_init pointer needs an @export for the same reason classlist_entry does:
+        // without it, Zig drops the unused storage before the linker ever sees the `__mod_init_func`
+        // section, so dyld has nothing to run at image load.
+        @export(&Mod.mod_init_ptr, .{
+            .name = "\x01l_OBJC_MOD_INIT_PROTOCOLS_$_" ++ name,
+            .linkage = .strong,
+            .visibility = .hidden,
+            .section = SEC_MOD_INIT_FUNC,
+        });
+    }
 
     return ClassWrapper(Spec);
 }

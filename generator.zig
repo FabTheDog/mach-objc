@@ -1156,7 +1156,9 @@ fn Generator(comptime WriterType: type) type {
                 }
                 try self.writer.writeAll(", &.{");
             } else {
-                try self.writer.writeAll("    pub const InternalInfo = objc.ExternProtocol(@This(), &.{");
+                try self.writer.print("    pub const InternalInfo = objc.ExternProtocol(\"{s}\", @This(), &.{{", .{
+                    container.name,
+                });
             }
             var first = true;
             for (container.protocols.items) |protocol| {
