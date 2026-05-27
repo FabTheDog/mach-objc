@@ -18,6 +18,18 @@ pub const Layer = opaque {
     pub const alloc = InternalInfo.alloc;
     pub const allocInit = InternalInfo.allocInit;
 
+    pub fn addSublayer(self_: *@This(), layer_: *Layer) void {
+        return objc.msgSend(self_, "addSublayer:", void, .{layer_});
+    }
+    pub fn setFrame(self_: *@This(), frame_: cg.Rect) void {
+        return objc.msgSend(self_, "setFrame:", void, .{frame_});
+    }
+    pub fn contentsScale(self_: *@This()) cg.Float {
+        return objc.msgSend(self_, "contentsScale", cg.Float, .{});
+    }
+    pub fn setContentsScale(self_: *@This(), contentsScale_: cg.Float) void {
+        return objc.msgSend(self_, "setContentsScale:", void, .{contentsScale_});
+    }
     pub fn setOpaque(self_: *@This(), opaque_: bool) void {
         return objc.msgSend(self_, "setOpaque:", void, .{opaque_});
     }

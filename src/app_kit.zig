@@ -311,6 +311,9 @@ pub const Window = opaque {
     pub fn isVisible(self_: *@This()) bool {
         return objc.msgSend(self_, "isVisible", bool, .{});
     }
+    pub fn isKeyWindow(self_: *@This()) bool {
+        return objc.msgSend(self_, "isKeyWindow", bool, .{});
+    }
     pub fn backingScaleFactor(self_: *@This()) cg.Float {
         return objc.msgSend(self_, "backingScaleFactor", cg.Float, .{});
     }
@@ -412,6 +415,12 @@ pub const Event = opaque {
     pub fn locationInWindow(self_: *@This()) Point {
         return objc.msgSend(self_, "locationInWindow", Point, .{});
     }
+    pub fn deltaX(self_: *@This()) cg.Float {
+        return objc.msgSend(self_, "deltaX", cg.Float, .{});
+    }
+    pub fn deltaY(self_: *@This()) cg.Float {
+        return objc.msgSend(self_, "deltaY", cg.Float, .{});
+    }
     pub fn hasPreciseScrollingDeltas(self_: *@This()) bool {
         return objc.msgSend(self_, "hasPreciseScrollingDeltas", bool, .{});
     }
@@ -432,6 +441,9 @@ pub const Event = opaque {
     }
     pub fn phase(self_: *@This()) EventPhase {
         return objc.msgSend(self_, "phase", EventPhase, .{});
+    }
+    pub fn mouseLocation() Point {
+        return objc.msgSend(@This().InternalInfo.class(), "mouseLocation", Point, .{});
     }
     pub fn T_modifierFlags() EventModifierFlags {
         return objc.msgSend(@This().InternalInfo.class(), "modifierFlags", EventModifierFlags, .{});

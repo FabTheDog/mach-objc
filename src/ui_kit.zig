@@ -603,6 +603,12 @@ pub const UIView = opaque {
     pub fn setOpaque(self_: *@This(), opaque_: bool) void {
         return objc.msgSend(self_, "setOpaque:", void, .{opaque_});
     }
+    pub fn isHidden(self_: *@This()) bool {
+        return objc.msgSend(self_, "isHidden", bool, .{});
+    }
+    pub fn setHidden(self_: *@This(), hidden_: bool) void {
+        return objc.msgSend(self_, "setHidden:", void, .{hidden_});
+    }
     pub fn addGestureRecognizer(self_: *@This(), gestureRecognizer_: *UIGestureRecognizer) void {
         return objc.msgSend(self_, "addGestureRecognizer:", void, .{gestureRecognizer_});
     }
