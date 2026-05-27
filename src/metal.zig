@@ -1,7 +1,7 @@
 const std = @import("std");
-const cf = @import("core_foundation.zig");
-const ns = @import("foundation.zig");
-const objc = @import("objc.zig");
+const cf = @import("../core_foundation.zig");
+const ns = @import("../foundation.zig");
+const objc = @import("../objc.zig");
 
 // ------------------------------------------------------------------------------------------------
 // Opaque types

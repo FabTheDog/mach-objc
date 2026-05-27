@@ -2655,56 +2655,56 @@ const framework_specs = [_]FrameworkSpec{
     .{
         .name = "Metal",
         .tag = .metal,
-        .manual_path = "metal_manual.zig",
-        .output_path = "src/metal.zig",
+        .manual_path = "src/metal.zig",
+        .output_path = "src/generated/metal.zig",
         .header_content = .{ .inline_text = "\n#include <Metal/Metal.h>\n" },
         .extra_clang_args = &.{},
     },
     .{
         .name = "AVFAudio",
         .tag = .avf_audio,
-        .manual_path = "avf_audio_manual.zig",
-        .output_path = "src/avf_audio.zig",
-        .header_content = .{ .file_path = "avf_audio_headers.m" },
+        .manual_path = "src/avf_audio.zig",
+        .output_path = "src/generated/avf_audio.zig",
+        .header_content = .{ .file_path = "src/avf_audio_headers.m" },
         .extra_clang_args = &.{},
     },
     .{
         .name = "CoreMIDI",
         .tag = .core_midi,
-        .manual_path = "core_midi_manual.zig",
-        .output_path = "src/core_midi.zig",
+        .manual_path = "src/core_midi.zig",
+        .output_path = "src/generated/core_midi.zig",
         .header_content = .{ .inline_text = "\n#include <CoreMIDI/MidiServices.h>\n" },
         .extra_clang_args = &.{},
     },
     .{
         .name = "QuartzCore",
         .tag = .quartz_core,
-        .manual_path = "quartz_core_manual.zig",
-        .output_path = "src/quartz_core.zig",
+        .manual_path = "src/quartz_core.zig",
+        .output_path = "src/generated/quartz_core.zig",
         .header_content = .{ .inline_text = "\n#include <QuartzCore/QuartzCore.h>\n" },
         .extra_clang_args = &.{"-Wno-availability"},
     },
     .{
         .name = "AppKit",
         .tag = .app_kit,
-        .manual_path = "app_kit_manual.zig",
-        .output_path = "src/app_kit.zig",
+        .manual_path = "src/app_kit.zig",
+        .output_path = "src/generated/app_kit.zig",
         .header_content = .{ .inline_text = "\n#include <AppKit/AppKit.h>\n" },
         .extra_clang_args = &.{"-Wno-availability"},
     },
     .{
         .name = "CoreVideo",
         .tag = .core_video,
-        .manual_path = "core_video_manual.zig",
-        .output_path = "src/core_video.zig",
+        .manual_path = "src/core_video.zig",
+        .output_path = "src/generated/core_video.zig",
         .header_content = .{ .inline_text = "\n#include <CoreVideo/CoreVideo.h>\n" },
         .extra_clang_args = &.{"-Wno-availability"},
     },
     .{
         .name = "UIKit",
         .tag = .ui_kit,
-        .manual_path = "ui_kit_manual.zig",
-        .output_path = "src/ui_kit.zig",
+        .manual_path = "src/ui_kit.zig",
+        .output_path = "src/generated/ui_kit.zig",
         .header_content = .{ .inline_text = "\n#include <UIKit/UIKit.h>\n" },
         .sdk = .iphoneos,
         .extra_clang_args = &.{"-Wno-availability"},
@@ -2833,6 +2833,7 @@ fn generateForFramework(allocator: std.mem.Allocator, io: std.Io, spec: Framewor
     try converter.convert(valueTree.value);
 
     // Create output file, write manual content, then generate
+    try std.Io.Dir.createDirPath(.cwd(), io, "src/generated");
     var out_file = try std.Io.Dir.createFile(.cwd(), io, spec.output_path, .{});
     defer out_file.close(io);
     try out_file.writeStreamingAll(io, manual_content);
@@ -2867,11 +2868,15 @@ fn generateAllFrameworks(allocator: std.mem.Allocator, io: std.Io, dirs: SdkDirs
 
     // Run zig fmt on generated files
     const fmt_stdout = try runCommand(allocator, io, &.{
-        "zig",               "fmt",
-        "src/metal.zig",     "src/avf_audio.zig",
-        "src/core_midi.zig", "src/quartz_core.zig",
-        "src/app_kit.zig",   "src/core_video.zig",
-        "src/ui_kit.zig",
+        "zig",
+        "fmt",
+        "src/generated/metal.zig",
+        "src/generated/avf_audio.zig",
+        "src/generated/core_midi.zig",
+        "src/generated/quartz_core.zig",
+        "src/generated/app_kit.zig",
+        "src/generated/core_video.zig",
+        "src/generated/ui_kit.zig",
     });
     allocator.free(fmt_stdout);
 }
