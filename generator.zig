@@ -2000,6 +2000,10 @@ fn generateQuartzCore(generator: anytype) !void {
     generator.namespace = "CA";
     generator.allow_methods = &.{
         // CALayer
+        [2][]const u8{ "CALayer", "setFrame" },
+        [2][]const u8{ "CALayer", "contentsScale" },
+        [2][]const u8{ "CALayer", "setContentsScale" },
+        [2][]const u8{ "CALayer", "addSublayer" },
         [2][]const u8{ "CALayer", "setOpaque" },
         [2][]const u8{ "CALayer", "setOpacity" },
 
@@ -2087,6 +2091,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSWindow", "isReleasedWhenClosed" },
         [2][]const u8{ "NSWindow", "setReleasedWhenClosed" },
         [2][]const u8{ "NSWindow", "contentView" },
+        [2][]const u8{ "NSWindow", "isKeyWindow" },
         [2][]const u8{ "NSWindow", "isVisible" },
         [2][]const u8{ "NSWindow", "setIsVisible" },
         [2][]const u8{ "NSWindow", "makeKeyAndOrderFront" },
@@ -2164,8 +2169,11 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSEvent", "modifierFlags" },
         [2][]const u8{ "NSEvent", "isARepeat" },
         [2][]const u8{ "NSEvent", "locationInWindow" },
+        [2][]const u8{ "NSEvent", "mouseLocation" },
         [2][]const u8{ "NSEvent", "pressedMouseButtons" },
         [2][]const u8{ "NSEvent", "buttonNumber" },
+        [2][]const u8{ "NSEvent", "deltaX" },
+        [2][]const u8{ "NSEvent", "deltaY" },
         [2][]const u8{ "NSEvent", "scrollingDeltaX" },
         [2][]const u8{ "NSEvent", "scrollingDeltaY" },
         [2][]const u8{ "NSEvent", "hasPreciseScrollingDeltas" },
@@ -2474,6 +2482,8 @@ fn generateUIKit(generator: anytype) !void {
         [2][]const u8{ "UIView", "setContentScaleFactor" },
         [2][]const u8{ "UIView", "backgroundColor" },
         [2][]const u8{ "UIView", "setBackgroundColor" },
+        [2][]const u8{ "UIView", "isHidden" },
+        [2][]const u8{ "UIView", "setHidden" },
         [2][]const u8{ "UIView", "setOpaque" },
         [2][]const u8{ "UIView", "isOpaque" },
         [2][]const u8{ "UIView", "addSubview" },
