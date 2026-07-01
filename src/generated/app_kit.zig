@@ -357,6 +357,42 @@ pub const Dictionary = opaque {
     pub const allocInit = InternalInfo.allocInit;
 };
 
+pub const Menu = opaque {
+    pub const InternalInfo = objc.ExternClass("NSMenu", @This(), ObjectInterface, &.{});
+    pub const as = InternalInfo.as;
+    pub const retain = InternalInfo.retain;
+    pub const release = InternalInfo.release;
+    pub const autorelease = InternalInfo.autorelease;
+    pub const new = InternalInfo.new;
+    pub const alloc = InternalInfo.alloc;
+    pub const allocInit = InternalInfo.allocInit;
+
+    pub fn addItem(self_: *@This(), newItem_: *MenuItemProtocol) void {
+        return objc.msgSend(self_, "addItem:", void, .{newItem_});
+    }
+    pub fn addItemWithTitle_action_keyEquivalent(self_: *@This(), string_: *String, selector_: ?*objc.Selector, charCode_: *String) *MenuItemProtocol {
+        return objc.msgSend(self_, "addItemWithTitle:action:keyEquivalent:", *MenuItemProtocol, .{ string_, selector_, charCode_ });
+    }
+};
+
+pub const MenuItemInterface = opaque {
+    pub const InternalInfo = objc.ExternClass("NSMenuItem", @This(), ObjectInterface, &.{});
+    pub const as = InternalInfo.as;
+    pub const retain = InternalInfo.retain;
+    pub const release = InternalInfo.release;
+    pub const autorelease = InternalInfo.autorelease;
+    pub const new = InternalInfo.new;
+    pub const alloc = InternalInfo.alloc;
+    pub const allocInit = InternalInfo.allocInit;
+
+    pub fn separatorItem() *MenuItemProtocol {
+        return objc.msgSend(@This().InternalInfo.class(), "separatorItem", *MenuItemProtocol, .{});
+    }
+    pub fn setSubmenu(self_: *@This(), submenu_: ?*Menu) void {
+        return objc.msgSend(self_, "setSubmenu:", void, .{submenu_});
+    }
+};
+
 pub const ObjectInterface = opaque {
     pub const InternalInfo = objc.ExternClass("NSObject", @This(), objc.Id, &.{});
     pub const as = InternalInfo.as;
@@ -682,4 +718,12 @@ pub const ObjectProtocol = opaque {
     pub fn retainCount(self_: *@This()) UInteger {
         return objc.msgSend(self_, "retainCount", UInteger, .{});
     }
+};
+
+pub const MenuItemProtocol = opaque {
+    pub const InternalInfo = objc.ExternProtocol("NSMenuItem", @This(), &.{});
+    pub const as = InternalInfo.as;
+    pub const retain = InternalInfo.retain;
+    pub const release = InternalInfo.release;
+    pub const autorelease = InternalInfo.autorelease;
 };
