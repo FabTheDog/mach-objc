@@ -2091,6 +2091,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSApplication", "nextEventMatchingMask:untilDate:inMode:dequeue" },
         [2][]const u8{ "NSApplication", "sendEvent" },
         [2][]const u8{ "NSApplication", "currentEvent" },
+        [2][]const u8{ "NSApplication", "setMainMenu" },
 
         [2][]const u8{ "NSWindow", "initWithContentRect:styleMask:backing:defer:screen" },
         [2][]const u8{ "NSWindow", "isReleasedWhenClosed" },
