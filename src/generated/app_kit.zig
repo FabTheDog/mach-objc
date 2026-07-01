@@ -215,6 +215,9 @@ pub const Application = opaque {
     pub fn setDelegate(self_: *@This(), delegate_: ?*ApplicationDelegate) void {
         return objc.msgSend(self_, "setDelegate:", void, .{delegate_});
     }
+    pub fn setMainMenu(self_: *@This(), mainMenu_: ?*Menu) void {
+        return objc.msgSend(self_, "setMainMenu:", void, .{mainMenu_});
+    }
     pub fn sendEvent(self_: *@This(), event_: *Event) void {
         return objc.msgSend(self_, "sendEvent:", void, .{event_});
     }
