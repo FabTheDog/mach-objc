@@ -379,7 +379,13 @@ const SEC_MOD_INIT_FUNC = "__DATA,__mod_init_func,mod_init_funcs";
 
 /// Obj-C selector. Opaque struct exposed by pointer (`?*Selector` for nullable, `*Selector` for
 /// non-null)
-pub const Selector = opaque {};
+pub const Selector = opaque {
+    /// Return the runtime `SEL` for `name`. The Obj-C runtime interns selectors, so repeated
+    /// calls with the same name yield the same pointer, stable for the process lifetime.
+    pub fn named(comptime name: []const u8) *Selector {
+        return @ptrCast(sel_registerName(name ++ "\x00").?);
+    }
+};
 
 const IMP = *const fn () callconv(.c) void;
 
