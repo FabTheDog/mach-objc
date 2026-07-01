@@ -326,6 +326,11 @@ pub const Parser = struct {
             "CF_SWIFT_NAME",
             "CG_AVAILABLE_STARTING",
             "CG_AVAILABLE_BUT_DEPRECATED",
+            // GCC-style attribute spelled out in some qualType strings, e.g. the NEON vector
+            // typedefs pulled in transitively via <simd/simd.h>:
+            //   __attribute__((neon_vector_type(8))) signed char
+            // Skip the whole `((...))` group; skipParenContent handles the nested parens.
+            "__attribute__",
         };
         for (list) |m| if (std.mem.eql(u8, text, m)) return true;
         return false;
@@ -2135,6 +2140,12 @@ fn generateAppKit(generator: anytype) !void {
 
         [2][]const u8{ "NSAppearance", "appearanceNamed" },
 
+        [2][]const u8{ "NSMenu", "addItem" },
+        [2][]const u8{ "NSMenu", "addItemWithTitle:action:keyEquivalent" },
+
+        [2][]const u8{ "NSMenuItem", "setSubmenu" },
+        [2][]const u8{ "NSMenuItem", "separatorItem" },
+
         [2][]const u8{ "NSWindowDelegate", "windowWillResize:toSize" },
 
         [2][]const u8{ "NSView", "layer" },
@@ -2210,7 +2221,8 @@ fn generateAppKit(generator: anytype) !void {
     // try generator.addInterface("NSUserActivity");
     // try generator.addInterface("NSCoder");
     try generator.addInterface("NSDictionary");
-    // try generator.addInterface("NSMenu");
+    try generator.addInterface("NSMenu");
+    try generator.addInterface("NSMenuItem");
     // try generator.addInterface("NSArray");
     // try generator.addInterface("NSURL");
     // try generator.addInterface("NSError");
@@ -2428,6 +2440,10 @@ fn generateAppKit(generator: anytype) !void {
     // try generator.addProtocol("NSCopying");
     // try generator.addProtocol("NSUserInterfaceItemSearching");
     try generator.addProtocol("NSObject");
+    // NSMenuItem is declared as both an @interface and an @protocol in AppKit, so it is
+    // "ambiguous": type references resolve to MenuItemProtocol while methods live on
+    // MenuItemInterface. Emit the protocol too so the MenuItemProtocol type exists.
+    try generator.addProtocol("NSMenuItem");
     // try generator.addProtocol("NSCoding");
     // try generator.addProtocol("NSMutableCopying");
     // try generator.addProtocol("NSProgressReporting");
