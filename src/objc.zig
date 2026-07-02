@@ -151,12 +151,8 @@ pub fn superFn(
 /// Be careful. The return type and argument types *must* match the Objective-C method's signature.
 /// No compile-time verification is performed.
 ///
-/// On macOS we use the clang-style `objc_msgSend$<selector>` dispatch-stub mechanism (cheaper at
-/// call sites, populated via the `__objc_stubs` section). On iOS that mechanism currently relies on
-/// Zig's linker fixing up entries in `__objc_selrefs` so dyld can rebind them to canonical SELs,
-/// which is broken: the runtime sees our local methname pointer rather than the shared-cache SEL
-/// and rejects every send. We fall back to the classic `sel_registerName` + plain `objc_msgSend`
-/// path on iOS, caching the canonical SEL per call site so the lookup happens at most once.
+/// We resolve the selector at runtime via `sel_registerName` and call plain `objc_msgSend`, caching
+/// the canonical SEL per call site so the lookup happens at most once.
 pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: type, args: anytype) return_type {
     const n_colons = comptime std.mem.count(u8, selector, ":");
     if (comptime n_colons != args.len) {
@@ -171,11 +167,8 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
     // `class_getClassMethod()`, then call `method_getTypeEncoding()`, and then parse the string and
     // validate it against `receiver` and `args`.
 
-    const use_stubs = comptime builtin.target.os.tag == .macos;
-    const SecondParam = if (use_stubs) [*:0]c_char else ?*Selector;
-
     const Fn = comptime init: {
-        var param_types: []const type = &.{ @TypeOf(receiver), SecondParam };
+        var param_types: []const type = &.{ @TypeOf(receiver), ?*Selector };
         var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{
             std.builtin.Type.Fn.Param.Attributes{},
             std.builtin.Type.Fn.Param.Attributes{},
@@ -196,22 +189,17 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
     const needs_stret = comptime builtin.target.cpu.arch == .x86 and @sizeOf(return_type) > 16;
     const msg_send_fn_name = comptime if (needs_stret) "objc_msgSend_stret" else if (needs_fpret) "objc_msgSend_fpret" else "objc_msgSend";
 
-    if (use_stubs) {
-        const msg_send_fn = @extern(*const Fn, .{ .name = msg_send_fn_name ++ "$" ++ selector });
-        return @call(.auto, msg_send_fn, .{ receiver, undefined } ++ args);
-    } else {
-        // Resolve the selector via the runtime once per call site; cache the result so subsequent
-        // calls are a single load.
-        const SelCache = struct {
-            var sel: ?*Selector = null;
-            fn get() ?*Selector {
-                if (sel == null) sel = @ptrCast(sel_registerName(selector ++ "\x00"));
-                return sel;
-            }
-        };
-        const msg_send_fn = @extern(*const Fn, .{ .name = msg_send_fn_name });
-        return @call(.auto, msg_send_fn, .{ receiver, SelCache.get() } ++ args);
-    }
+    // Resolve the selector via the runtime once per call site; cache the result so subsequent
+    // calls are a single load.
+    const SelCache = struct {
+        var sel: ?*Selector = null;
+        fn get() ?*Selector {
+            if (sel == null) sel = @ptrCast(sel_registerName(selector ++ "\x00"));
+            return sel;
+        }
+    };
+    const msg_send_fn = @extern(*const Fn, .{ .name = msg_send_fn_name });
+    return @call(.auto, msg_send_fn, .{ receiver, SelCache.get() } ++ args);
 }
 
 pub fn ExternClass(comptime name: []const u8, T: type, Super: type, comptime protocols: []const type) type {
