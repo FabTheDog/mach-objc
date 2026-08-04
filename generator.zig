@@ -2059,6 +2059,10 @@ fn generateQuartzCore(generator: anytype) !void {
         [2][]const u8{ "CAMetalDisplayLink", "setPaused" },
         [2][]const u8{ "CAMetalDisplayLink", "delegate" },
         [2][]const u8{ "CAMetalDisplayLink", "setDelegate" },
+        [2][]const u8{ "CAMetalDisplayLink", "preferredFrameLatency" },
+        [2][]const u8{ "CAMetalDisplayLink", "setPreferredFrameLatency" },
+        [2][]const u8{ "CAMetalDisplayLink", "preferredFrameRateRange" },
+        [2][]const u8{ "CAMetalDisplayLink", "setPreferredFrameRateRange" },
 
         // CAMetalDisplayLinkUpdate
         [2][]const u8{ "CAMetalDisplayLinkUpdate", "drawable" },
@@ -2119,6 +2123,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSWindow", "backingScaleFactor" },
         [2][]const u8{ "NSWindow", "setAppearance" },
         [2][]const u8{ "NSWindow", "sendEvent" },
+        [2][]const u8{ "NSWindow", "screen" },
 
         [2][]const u8{ "NSCursor", "hide" },
         [2][]const u8{ "NSCursor", "unhide" },
@@ -2202,6 +2207,7 @@ fn generateAppKit(generator: anytype) !void {
         [2][]const u8{ "NSScreen", "screens" },
         [2][]const u8{ "NSScreen", "mainScreen" },
         [2][]const u8{ "NSScreen", "frame" },
+        [2][]const u8{ "NSScreen", "maximumFramesPerSecond" },
 
         [2][]const u8{ "NSApplicationDelegate", "applicationDidFinishLaunching" },
 
