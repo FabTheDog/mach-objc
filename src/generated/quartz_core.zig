@@ -8,6 +8,12 @@ pub const UInteger = ns.UInteger;
 pub const TimeInterval = ns.TimeInterval;
 pub const String = ns.String;
 
+pub const FrameRateRange = extern struct {
+    minimum: f32,
+    maximum: f32,
+    preferred: f32,
+};
+
 pub const Layer = opaque {
     pub const InternalInfo = objc.ExternClass("CALayer", @This(), ns.ObjectInterface, &.{});
     pub const as = InternalInfo.as;
@@ -188,6 +194,18 @@ pub const MetalDisplayLink = opaque {
     }
     pub fn setDelegate(self_: *@This(), delegate_: ?*MetalDisplayLinkDelegate) void {
         return objc.msgSend(self_, "setDelegate:", void, .{delegate_});
+    }
+    pub fn preferredFrameLatency(self_: *@This()) f32 {
+        return objc.msgSend(self_, "preferredFrameLatency", f32, .{});
+    }
+    pub fn setPreferredFrameLatency(self_: *@This(), preferredFrameLatency_: f32) void {
+        return objc.msgSend(self_, "setPreferredFrameLatency:", void, .{preferredFrameLatency_});
+    }
+    pub fn preferredFrameRateRange(self_: *@This()) FrameRateRange {
+        return objc.msgSend(self_, "preferredFrameRateRange", FrameRateRange, .{});
+    }
+    pub fn setPreferredFrameRateRange(self_: *@This(), preferredFrameRateRange_: FrameRateRange) void {
+        return objc.msgSend(self_, "setPreferredFrameRateRange:", void, .{preferredFrameRateRange_});
     }
     pub fn isPaused(self_: *@This()) bool {
         return objc.msgSend(self_, "isPaused", bool, .{});

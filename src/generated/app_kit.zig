@@ -320,6 +320,9 @@ pub const Window = opaque {
     pub fn backingScaleFactor(self_: *@This()) cg.Float {
         return objc.msgSend(self_, "backingScaleFactor", cg.Float, .{});
     }
+    pub fn screen(self_: *@This()) ?*Screen {
+        return objc.msgSend(self_, "screen", ?*Screen, .{});
+    }
     pub fn setMinSize(self_: *@This(), minSize_: Size) void {
         return objc.msgSend(self_, "setMinSize:", void, .{minSize_});
     }
@@ -657,6 +660,9 @@ pub const Screen = opaque {
     }
     pub fn frame(self_: *@This()) Rect {
         return objc.msgSend(self_, "frame", Rect, .{});
+    }
+    pub fn maximumFramesPerSecond(self_: *@This()) Integer {
+        return objc.msgSend(self_, "maximumFramesPerSecond", Integer, .{});
     }
 };
 
