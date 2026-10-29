@@ -25,16 +25,16 @@ test {
 }
 
 fn refAllDeclsRecursive(comptime T: type) void {
-    inline for (comptime std.meta.declarations(T)) |decl| {
-        const ptr_info = @typeInfo(@TypeOf(&@field(T, decl.name)));
+    inline for (comptime std.meta.declarations(T)) |decl_name| {
+        const ptr_info = @typeInfo(@TypeOf(&@field(T, decl_name)));
         if (ptr_info == .pointer and @typeInfo(ptr_info.pointer.child) == .type) {
-            const Inner = @field(T, decl.name);
+            const Inner = @field(T, decl_name);
             const inner_info = @typeInfo(Inner);
             if (inner_info == .@"struct" or inner_info == .@"opaque") {
                 refAllDeclsRecursive(Inner);
             }
         } else if (ptr_info == .pointer and @typeInfo(ptr_info.pointer.child) == .@"fn") {
-            _ = &@field(T, decl.name);
+            _ = &@field(T, decl_name);
         }
     }
 }

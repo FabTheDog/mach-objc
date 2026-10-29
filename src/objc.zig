@@ -87,11 +87,11 @@ pub fn superFn(
 
     // Build the IMP type: fn(self, _cmd: ?*Selector, args...) callconv(.c) Ret.
     const ImpFn = comptime init: {
-        const Attrs = std.builtin.Type.Fn.Param.Attributes;
-        var param_types: []const type = &.{ fn_info.params[0].type.?, ?*anyopaque };
+        const Attrs = std.builtin.Type.Fn.ParamAttributes;
+        var param_types: []const type = &.{ fn_info.param_types[0].?, ?*anyopaque };
         var param_attrs: []const Attrs = &.{ Attrs{}, Attrs{} };
-        for (fn_info.params[1..]) |p| {
-            param_types = param_types ++ .{p.type.?};
+        for (fn_info.param_types[1..]) |P| {
+            param_types = param_types ++ .{P.?};
             param_attrs = param_attrs ++ .{Attrs{}};
         }
         break :init @Fn(param_types, @ptrCast(param_attrs.ptr), Ret, .{ .@"callconv" = .c });
@@ -111,33 +111,33 @@ pub fn superFn(
     };
 
     // Build a typed Zig stub of `Fn` that injects `_cmd` and calls the cached IMP.
-    return switch (fn_info.params.len) {
+    return switch (fn_info.param_types.len) {
         1 => &(struct {
-            pub fn impl(a0: fn_info.params[0].type.?) Ret {
+            pub fn impl(a0: fn_info.param_types[0].?) Ret {
                 if (Cache.imp == null) Cache.resolve();
                 return Cache.imp.?(a0, Cache.sel);
             }
         }.impl),
         2 => &(struct {
-            pub fn impl(a0: fn_info.params[0].type.?, a1: fn_info.params[1].type.?) Ret {
+            pub fn impl(a0: fn_info.param_types[0].?, a1: fn_info.param_types[1].?) Ret {
                 if (Cache.imp == null) Cache.resolve();
                 return Cache.imp.?(a0, Cache.sel, a1);
             }
         }.impl),
         3 => &(struct {
-            pub fn impl(a0: fn_info.params[0].type.?, a1: fn_info.params[1].type.?, a2: fn_info.params[2].type.?) Ret {
+            pub fn impl(a0: fn_info.param_types[0].?, a1: fn_info.param_types[1].?, a2: fn_info.param_types[2].?) Ret {
                 if (Cache.imp == null) Cache.resolve();
                 return Cache.imp.?(a0, Cache.sel, a1, a2);
             }
         }.impl),
         4 => &(struct {
-            pub fn impl(a0: fn_info.params[0].type.?, a1: fn_info.params[1].type.?, a2: fn_info.params[2].type.?, a3: fn_info.params[3].type.?) Ret {
+            pub fn impl(a0: fn_info.param_types[0].?, a1: fn_info.param_types[1].?, a2: fn_info.param_types[2].?, a3: fn_info.param_types[3].?) Ret {
                 if (Cache.imp == null) Cache.resolve();
                 return Cache.imp.?(a0, Cache.sel, a1, a2, a3);
             }
         }.impl),
         5 => &(struct {
-            pub fn impl(a0: fn_info.params[0].type.?, a1: fn_info.params[1].type.?, a2: fn_info.params[2].type.?, a3: fn_info.params[3].type.?, a4: fn_info.params[4].type.?) Ret {
+            pub fn impl(a0: fn_info.param_types[0].?, a1: fn_info.param_types[1].?, a2: fn_info.param_types[2].?, a3: fn_info.param_types[3].?, a4: fn_info.param_types[4].?) Ret {
                 if (Cache.imp == null) Cache.resolve();
                 return Cache.imp.?(a0, Cache.sel, a1, a2, a3, a4);
             }
@@ -169,13 +169,13 @@ pub fn msgSend(receiver: anytype, comptime selector: []const u8, return_type: ty
 
     const Fn = comptime init: {
         var param_types: []const type = &.{ @TypeOf(receiver), ?*Selector };
-        var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{
-            std.builtin.Type.Fn.Param.Attributes{},
-            std.builtin.Type.Fn.Param.Attributes{},
+        var param_attrs: []const std.builtin.Type.Fn.ParamAttributes = &.{
+            std.builtin.Type.Fn.ParamAttributes{},
+            std.builtin.Type.Fn.ParamAttributes{},
         };
-        for (@typeInfo(@TypeOf(args)).@"struct".fields) |field| {
-            param_types = param_types ++ .{field.type};
-            param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
+        for (@typeInfo(@TypeOf(args)).@"struct".field_types) |FieldType| {
+            param_types = param_types ++ .{FieldType};
+            param_attrs = param_attrs ++ .{std.builtin.Type.Fn.ParamAttributes{}};
         }
         break :init @Fn(
             param_types,
@@ -524,11 +524,11 @@ const Accessor = struct {
                 const block = slot_ptr.* orelse return null;
 
                 const InvokeFn = comptime init: {
-                    const Attrs = std.builtin.Type.Fn.Param.Attributes;
+                    const Attrs = std.builtin.Type.Fn.ParamAttributes;
                     var param_types: []const type = &.{?*anyopaque};
                     var param_attrs: []const Attrs = &.{Attrs{}};
-                    for (fn_info.params) |p| {
-                        param_types = param_types ++ .{p.type.?};
+                    for (fn_info.param_types) |P| {
+                        param_types = param_types ++ .{P.?};
                         param_attrs = param_attrs ++ .{Attrs{}};
                     }
                     break :init @Fn(
@@ -593,10 +593,10 @@ const Accessor = struct {
 };
 
 fn Implementation(comptime Layout: type) type {
-    const fields = @typeInfo(Layout).@"struct".fields;
-    var names: [fields.len + 1][]const u8 = undefined;
-    var types: [fields.len + 1]type = undefined;
-    var attrs: [fields.len + 1]std.builtin.Type.StructField.Attributes = undefined;
+    const info = @typeInfo(Layout).@"struct";
+    var names: [info.field_names.len + 1][]const u8 = undefined;
+    var types: [info.field_names.len + 1]type = undefined;
+    var attrs: [info.field_names.len + 1]std.builtin.Type.Struct.FieldAttributes = undefined;
 
     // Slot 0: comptime `Layout: type = Layout`.
     names[0] = "Layout";
@@ -605,9 +605,9 @@ fn Implementation(comptime Layout: type) type {
     attrs[0] = .{ .@"comptime" = true, .default_value_ptr = @ptrCast(&layout_default) };
 
     // Slots 1..fields.len: one typed accessor per layout field.
-    inline for (fields, 1..) |f, i| {
-        names[i] = f.name;
-        types[i] = Accessor.Type(f.type);
+    inline for (info.field_names, info.field_types, 1..) |field_name, FieldType, i| {
+        names[i] = field_name;
+        types[i] = Accessor.Type(FieldType);
         attrs[i] = .{};
     }
     return @Struct(.auto, null, &names, &types, &attrs);
@@ -626,8 +626,8 @@ fn Implementation(comptime Layout: type) type {
 /// ```
 pub fn implementation(comptime class_name: []const u8, comptime Layout: type) Implementation(Layout) {
     var v: Implementation(Layout) = undefined;
-    inline for (@typeInfo(Layout).@"struct".fields) |f| {
-        @field(v, f.name) = .{ .offset = ivarOffsetExtern(class_name, f.name) };
+    inline for (@typeInfo(Layout).@"struct".field_names) |field_name| {
+        @field(v, field_name) = .{ .offset = ivarOffsetExtern(class_name, field_name) };
     }
     return v;
 }
@@ -743,10 +743,9 @@ fn isStrongObjectType(comptime T: type) bool {
 
 /// Reflects on a struct describing an ivar layout and produce the `Ivar` slice
 fn ivarsFromStruct(comptime S: type) []const Ivar {
-    const fields = @typeInfo(S).@"struct".fields;
-    var out: [fields.len]Ivar = undefined;
-    inline for (fields, 0..) |f, i| {
-        const T = f.type;
+    const info = @typeInfo(S).@"struct";
+    var out: [info.field_names.len]Ivar = undefined;
+    inline for (info.field_names, info.field_types, 0..) |field_name, T, i| {
         var enc: []const u8 = "@";
         var strong = false;
         if (comptime isBlockType(T)) {
@@ -760,7 +759,7 @@ fn ivarsFromStruct(comptime S: type) []const Ivar {
             else => @compileError("ivarsFromStruct: unsupported field type " ++ @typeName(T)),
         }
         out[i] = .{
-            .name = f.name,
+            .name = field_name,
             .type = enc,
             .size = @sizeOf(T),
             .alignment_log2 = @ctz(@as(u32, @alignOf(T))),
@@ -778,44 +777,44 @@ fn Trampoline(comptime user_fn: anytype) type {
     const UserFn = @typeInfo(@TypeOf(user_fn)).pointer.child;
     const info = @typeInfo(UserFn).@"fn";
     const Ret = info.return_type.?;
-    if (info.params.len == 0) @compileError("method must have at least a `self` parameter");
-    return switch (info.params.len) {
+    if (info.param_types.len == 0) @compileError("method must have at least a `self` parameter");
+    return switch (info.param_types.len) {
         1 => struct {
-            const A0 = info.params[0].type.?;
+            const A0 = info.param_types[0].?;
             pub fn impl(a0: A0, _: ?*Selector) callconv(.c) Ret {
                 return user_fn(a0);
             }
         },
         2 => struct {
-            const A0 = info.params[0].type.?;
-            const A1 = info.params[1].type.?;
+            const A0 = info.param_types[0].?;
+            const A1 = info.param_types[1].?;
             pub fn impl(a0: A0, _: ?*Selector, a1: A1) callconv(.c) Ret {
                 return user_fn(a0, a1);
             }
         },
         3 => struct {
-            const A0 = info.params[0].type.?;
-            const A1 = info.params[1].type.?;
-            const A2 = info.params[2].type.?;
+            const A0 = info.param_types[0].?;
+            const A1 = info.param_types[1].?;
+            const A2 = info.param_types[2].?;
             pub fn impl(a0: A0, _: ?*Selector, a1: A1, a2: A2) callconv(.c) Ret {
                 return user_fn(a0, a1, a2);
             }
         },
         4 => struct {
-            const A0 = info.params[0].type.?;
-            const A1 = info.params[1].type.?;
-            const A2 = info.params[2].type.?;
-            const A3 = info.params[3].type.?;
+            const A0 = info.param_types[0].?;
+            const A1 = info.param_types[1].?;
+            const A2 = info.param_types[2].?;
+            const A3 = info.param_types[3].?;
             pub fn impl(a0: A0, _: ?*Selector, a1: A1, a2: A2, a3: A3) callconv(.c) Ret {
                 return user_fn(a0, a1, a2, a3);
             }
         },
         5 => struct {
-            const A0 = info.params[0].type.?;
-            const A1 = info.params[1].type.?;
-            const A2 = info.params[2].type.?;
-            const A3 = info.params[3].type.?;
-            const A4 = info.params[4].type.?;
+            const A0 = info.param_types[0].?;
+            const A1 = info.param_types[1].?;
+            const A2 = info.param_types[2].?;
+            const A3 = info.param_types[3].?;
+            const A4 = info.param_types[4].?;
             pub fn impl(a0: A0, _: ?*Selector, a1: A1, a2: A2, a3: A3, a4: A4) callconv(.c) Ret {
                 return user_fn(a0, a1, a2, a3, a4);
             }
@@ -865,7 +864,7 @@ fn encodeOne(comptime T: type) []const u8 {
                 const full = @typeName(T);
                 const tag = if (std.mem.lastIndexOfScalar(u8, full, '.')) |i| full[i + 1 ..] else full;
                 var fields_enc: []const u8 = "";
-                for (s.fields) |f| fields_enc = fields_enc ++ encodeOne(f.type);
+                for (s.field_types) |FieldType| fields_enc = fields_enc ++ encodeOne(FieldType);
                 break :blk "{" ++ tag ++ "=" ++ fields_enc ++ "}";
             },
             else => @compileError("typeEncoding: unsupported type " ++ @typeName(T)),
@@ -894,8 +893,8 @@ fn typeEncoding(comptime Fn: type) [:0]const u8 {
 
     comptime var size: usize = 0;
     comptime var args: []const u8 = "";
-    inline for (info.params) |p| {
-        const T = p.type orelse @compileError("typeEncoding: parameter has no type");
+    inline for (info.param_types) |P| {
+        const T = P orelse @compileError("typeEncoding: parameter has no type");
         args = args ++ encodeOne(T) ++ std.fmt.comptimePrint("{d}", .{size});
         size += @sizeOf(T);
     }
@@ -1024,9 +1023,9 @@ pub fn DefineClass(comptime Spec: type) type {
     const methods: []const Method = mk: {
         var list: []const Method = &.{};
         if (@hasDecl(Spec, "methods")) {
-            inline for (@typeInfo(Spec.methods).@"struct".decls) |d| {
-                const fn_ptr = &@field(Spec.methods, d.name);
-                list = list ++ &[_]Method{method(d.name, fn_ptr)};
+            inline for (@typeInfo(Spec.methods).@"struct".decl_names) |decl_name| {
+                const fn_ptr = &@field(Spec.methods, decl_name);
+                list = list ++ &[_]Method{method(decl_name, fn_ptr)};
             }
         }
         const need_destruct = blk: {
@@ -1055,9 +1054,9 @@ pub fn DefineClass(comptime Spec: type) type {
     const direct_methods: []const DirectMethod = mk: {
         var list: []const DirectMethod = &.{};
         if (@hasDecl(Spec, "direct_methods")) {
-            inline for (@typeInfo(Spec.direct_methods).@"struct".decls) |d| {
-                const fn_ptr = &@field(Spec.direct_methods, d.name);
-                list = list ++ &[_]DirectMethod{.{ .sel = d.name, .imp = @ptrCast(fn_ptr) }};
+            inline for (@typeInfo(Spec.direct_methods).@"struct".decl_names) |decl_name| {
+                const fn_ptr = &@field(Spec.direct_methods, decl_name);
+                list = list ++ &[_]DirectMethod{.{ .sel = decl_name, .imp = @ptrCast(fn_ptr) }};
             }
         }
         inline for (ivars) |iv| skip: {
@@ -1294,7 +1293,7 @@ fn ClassWrapper(comptime Spec: type) type {
     const protocols: []const type = if (@hasDecl(Spec, "protocols")) Spec.protocols else &.{};
 
     const CallTag = comptime CallTagEnum(Spec);
-    const method_count = if (@hasDecl(Spec, "methods")) @typeInfo(Spec.methods).@"struct".decls.len else 0;
+    const method_count = if (@hasDecl(Spec, "methods")) @typeInfo(Spec.methods).@"struct".decl_names.len else 0;
     const SpecSelf = if (@hasDecl(Spec, "Self")) Spec.Self else opaque {};
 
     return opaque {
@@ -1330,19 +1329,19 @@ fn ClassWrapper(comptime Spec: type) type {
         ///
         /// Return type is inferred from the IMP signature, with `Self` rewritten to `@This()`
         pub fn call(o: *@This(), comptime tag: CallTag, args: anytype) CallReturn(tag) {
-            if (comptime @typeInfo(CallTag).@"enum".fields.len == 0) {
+            if (comptime @typeInfo(CallTag).@"enum".field_names.len == 0) {
                 @compileError(Spec.class_name ++ " declares no methods");
             }
             switch (tag) {
                 inline else => |t| {
                     const idx = comptime @intFromEnum(t);
                     if (comptime idx < method_count) {
-                        const decls = comptime @typeInfo(Spec.methods).@"struct".decls;
-                        const sel = comptime decls[idx].name;
+                        const decl_names = comptime @typeInfo(Spec.methods).@"struct".decl_names;
+                        const sel = comptime decl_names[idx];
                         return msgSend(o, sel, CallReturn(t), args);
                     } else {
-                        const decls = comptime @typeInfo(Spec.direct_methods).@"struct".decls;
-                        const sel = comptime decls[idx - method_count].name;
+                        const decl_names = comptime @typeInfo(Spec.direct_methods).@"struct".decl_names;
+                        const sel = comptime decl_names[idx - method_count];
                         const RawFn = @TypeOf(@field(Spec.direct_methods, sel));
                         const Fn = comptime SubstituteSelfInFn(RawFn, SpecSelf, @This());
                         const imp = Extern.directMethod(sel, Fn);
@@ -1358,8 +1357,8 @@ fn ClassWrapper(comptime Spec: type) type {
                 .{ Spec.methods, idx }
             else
                 .{ Spec.direct_methods, idx - method_count };
-            const decls = @typeInfo(container).@"struct".decls;
-            const fn_info = @typeInfo(@TypeOf(@field(container, decls[decl_idx].name))).@"fn";
+            const decl_names = @typeInfo(container).@"struct".decl_names;
+            const fn_info = @typeInfo(@TypeOf(@field(container, decl_names[decl_idx]))).@"fn";
             return SubstituteSelf(fn_info.return_type.?, SpecSelf, @This());
         }
     };
@@ -1367,12 +1366,12 @@ fn ClassWrapper(comptime Spec: type) type {
 
 /// Builds an enum over the union of `Spec.methods` and `Spec.direct_methods` decl names.
 fn CallTagEnum(comptime Spec: type) type {
-    const m_decls: []const std.builtin.Type.Declaration = if (@hasDecl(Spec, "methods"))
-        @typeInfo(Spec.methods).@"struct".decls
+    const m_decls: []const [:0]const u8 = if (@hasDecl(Spec, "methods"))
+        @typeInfo(Spec.methods).@"struct".decl_names
     else
         &.{};
-    const d_decls: []const std.builtin.Type.Declaration = if (@hasDecl(Spec, "direct_methods"))
-        @typeInfo(Spec.direct_methods).@"struct".decls
+    const d_decls: []const [:0]const u8 = if (@hasDecl(Spec, "direct_methods"))
+        @typeInfo(Spec.direct_methods).@"struct".decl_names
     else
         &.{};
     const total = m_decls.len + d_decls.len;
@@ -1381,12 +1380,12 @@ fn CallTagEnum(comptime Spec: type) type {
     var names: [total][]const u8 = undefined;
     var values: [total]Tag = undefined;
     for (m_decls, 0..) |d, i| {
-        names[i] = comptime selectorToTagName(d.name);
+        names[i] = comptime selectorToTagName(d);
         values[i] = @intCast(i);
     }
     for (d_decls, 0..) |d, j| {
         const i = m_decls.len + j;
-        names[i] = comptime selectorToTagName(d.name);
+        names[i] = comptime selectorToTagName(d);
         values[i] = @intCast(i);
     }
     const final_names = names;
@@ -1422,14 +1421,14 @@ fn SubstituteSelf(comptime T: type, comptime SpecSelf: type, comptime Wrapper: t
 /// SubstituteSelf semantics.
 fn SubstituteSelfInFn(comptime Fn: type, comptime SpecSelf: type, comptime Wrapper: type) type {
     const info = @typeInfo(Fn).@"fn";
-    var param_types: [info.params.len]type = undefined;
-    var param_attrs: [info.params.len]std.builtin.Type.Fn.Param.Attributes = undefined;
-    for (info.params, 0..) |p, i| {
-        param_types[i] = SubstituteSelf(p.type.?, SpecSelf, Wrapper);
+    var param_types: [info.param_types.len]type = undefined;
+    var param_attrs: [info.param_types.len]std.builtin.Type.Fn.ParamAttributes = undefined;
+    for (info.param_types, 0..) |P, i| {
+        param_types[i] = SubstituteSelf(P.?, SpecSelf, Wrapper);
         param_attrs[i] = .{};
     }
     const new_ret = SubstituteSelf(info.return_type.?, SpecSelf, Wrapper);
     const final_params = param_types;
     const final_attrs = param_attrs;
-    return @Fn(&final_params, &final_attrs, new_ret, .{ .@"callconv" = info.calling_convention });
+    return @Fn(&final_params, &final_attrs, new_ret, .{ .@"callconv" = info.attrs.@"callconv" });
 }

@@ -33,10 +33,10 @@ pub fn Block(comptime Signature: type) type {
         pub fn invoke(self: *@This(), args: std.meta.ArgsTuple(Signature)) signature_fn_info.return_type.? {
             const SignatureForInvoke = comptime init: {
                 var param_types: []const type = &.{*@This()};
-                var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{std.builtin.Type.Fn.Param.Attributes{}};
-                for (signature_fn_info.params) |p| {
-                    param_types = param_types ++ .{p.type.?};
-                    param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
+                var param_attrs: []const std.builtin.Type.Fn.ParamAttributes = &.{std.builtin.Type.Fn.ParamAttributes{}};
+                for (signature_fn_info.param_types) |P| {
+                    param_types = param_types ++ .{P.?};
+                    param_attrs = param_attrs ++ .{std.builtin.Type.Fn.ParamAttributes{}};
                 }
                 break :init @Fn(
                     param_types,
@@ -90,7 +90,7 @@ pub fn BlockLiteral(comptime Context: type) type {
 }
 
 pub fn BlockLiteralWithSignature(comptime Context: type, comptime Signature: type) type {
-    // We could also obtain `Context` from `@typeInfo(Signature).@"fn".params[0].type`.
+    // We could also obtain `Context` from `@typeInfo(Signature).@"fn".param_types[0]`.
     return extern struct {
         literal: BlockLiteral(Context),
 
@@ -138,10 +138,10 @@ fn CopyDisposeBlockDescriptor(comptime Context: type) type {
 fn SignatureWithoutBlockLiteral(comptime Signature: type) type {
     const fn_info = @typeInfo(Signature).@"fn";
     var param_types: []const type = &.{};
-    var param_attrs: []const std.builtin.Type.Fn.Param.Attributes = &.{};
-    for (fn_info.params[1..]) |p| {
-        param_types = param_types ++ .{p.type.?};
-        param_attrs = param_attrs ++ .{std.builtin.Type.Fn.Param.Attributes{}};
+    var param_attrs: []const std.builtin.Type.Fn.ParamAttributes = &.{};
+    for (fn_info.param_types[1..]) |P| {
+        param_types = param_types ++ .{P.?};
+        param_attrs = param_attrs ++ .{std.builtin.Type.Fn.ParamAttributes{}};
     }
     return @Fn(
         param_types,
@@ -160,7 +160,7 @@ fn validateBlockSignature(comptime Invoke: type, comptime ExpectedLiteralType: t
             // }
 
             // TODO: should we allow zero params? At the ABI-level it would be fine but I think the compiler might consider it UB.
-            if (fn_info.params.len == 0 or fn_info.params[0].type != *ExpectedLiteralType) {
+            if (fn_info.param_types.len == 0 or fn_info.param_types[0] != *ExpectedLiteralType) {
                 @compileError("The first parameter for a block's `invoke` must be a block literal pointer");
             }
         },
