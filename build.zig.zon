@@ -2,7 +2,7 @@
     .name = .mach_objc,
     .fingerprint = 0xd0611af9d25e5da4, // Changing this has security and trust implications.
     .version = "0.0.0",
-    .mach_zig_version = "2026.4.10-mach",
+    .mach_zig_version = "0.17.0",
     .paths = .{
         "src",
         "build.zig",
